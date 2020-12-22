@@ -7,15 +7,18 @@ import java.util.Stack;
 public class Solver {
 
 
-    public static List<PathScore> solve(List<List<Integer>> codeMatrix, List<List<Integer>> sequences, int bufferSize) {
+    public static PathScore solve(List<List<Integer>> codeMatrix, List<List<Integer>> sequences, int bufferSize) {
         List<Path> paths = generatePaths(codeMatrix, bufferSize);
 
-        List<PathScore> scores = new ArrayList<>();
+        PathScore maxScore = null;
         for (Path path : paths) {
-            scores.add(new PathScore(path, sequences, bufferSize, codeMatrix));
+            PathScore c = new PathScore(path, sequences, bufferSize, codeMatrix);
+            if (maxScore == null || c.score() > maxScore.score()) {
+                maxScore = c;
+            }
         }
 
-        return scores;
+        return maxScore;
     }
 
     private static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix) {
