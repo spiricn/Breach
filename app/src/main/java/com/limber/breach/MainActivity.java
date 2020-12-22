@@ -123,30 +123,34 @@ public class MainActivity extends AppCompatActivity {
 
                         Analyzer.analyze(bmp, codeMatrx -> {
                             StringBuilder b = new StringBuilder();
-                            b.append("\n");
+                            b.append("Input matrix:\n");
                             for (List<Integer> line : codeMatrx.matrix) {
+                                b.append("\t");
                                 for (Integer i : line) {
                                     b.append(Integer.toHexString(i) + " ");
                                 }
                                 b.append("\n");
                             }
 
-                            b.append("\n\n");
+                            b.append("\n\nSequences:\n");
                             for (List<Integer> line : codeMatrx.sequences) {
+                                b.append("\t");
                                 for (Integer i : line) {
                                     b.append(Integer.toHexString(i) + " ");
                                 }
                                 b.append("\n");
                             }
 
-                            b.append("\n\nresult: " + Solver.solve(codeMatrx.matrix, codeMatrx.sequences, 7).path().toString());
+                            b.append("\n\nSolution path\n\t" + Solver.solve(codeMatrx.matrix, codeMatrx.sequences, 7).path().toString());
 
                             Log.e("@#", b.toString());
+
+                            ((TextView) findViewById(R.id.debugOverlay)).setText(b.toString());
 
 
 //                            t.setText(b.toString());
                         }, e -> {
-
+                            ((TextView) findViewById(R.id.debugOverlay)).setText("Error: " + e.toString());
                         });
 
                         super.onCaptureSuccess(image);

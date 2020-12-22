@@ -1,0 +1,8 @@
+<resources>
+    <style name="DebugOverlayStyle" parent="android:Theme.NoTitleBar.Fullscreen">
+        <item name="android:textViewStyle">@style/TextAppearance.AppCompat.Medium</item>
+        <item name="android:textColor">#ffffffff</item>
+        <item name="android:typeface">monospace</item>
+    </style>
+
+</resources>
