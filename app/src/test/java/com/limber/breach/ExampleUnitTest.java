@@ -36,16 +36,7 @@ public class ExampleUnitTest {
 
         int bufferSize = 7;
 
-        List<PathScore> scores = Solver.solve(codeMatrix, sequences, bufferSize);
-        assertNotNull(scores);
-        assertFalse(scores.isEmpty());
-
-        PathScore maxScore = null;
-        for (PathScore score : scores) {
-            if (maxScore == null || score.score() > maxScore.score()) {
-                maxScore = score;
-            }
-        }
+        PathScore maxScore = Solver.solve(codeMatrix, sequences, bufferSize);
         assertNotNull(maxScore);
 
         assertEquals(

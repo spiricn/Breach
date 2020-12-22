@@ -165,9 +165,9 @@ public class Analyzer {
                 continue;
             }
 
-//            if ((node.element.getBoundingBox().top ) < matrixRes.boundingBox.top) {
-//                continue;
-//            }
+            if ((node.element.getBoundingBox().top ) < (matrixRes.boundingBox.top - matrixRes.averageHeight * 2)) {
+                continue;
+            }
 
             if (node.element.getBoundingBox().bottom > matrixRes.boundingBox.bottom) {
                 continue;
@@ -213,28 +213,28 @@ public class Analyzer {
         Rect boundingBox;
     }
 
+    private static final int kMIN_MATRIX_SIZE = 4;
+
     private static MatrixResult processMatrix(Text texts) {
 
-        List<Node> nodes = getElements(texts);
+        // Preprocess nodes
+        List<Node> nodes = preprocessNodes(texts);
 
         List<Node> allNodes = new ArrayList<>();
         allNodes.addAll(nodes);
 
-        int size = mBmp.getHeight();
-
-        List<List<Node>> rows = new ArrayList<>();
 
         // Average size
         Pair<Double, Double> averageSize = getAverageSize(nodes);
         double averageWidth = averageSize.first;
         double averageHeight = averageSize.second;
 
-        rows = splitBy(Coord.row, averageHeight, nodes);
+        List<List<Node>> rows = splitBy(Coord.row, averageHeight, nodes);
 
         Collections.sort(rows, (o1, o2) -> Integer.compare(o1.get(0).element.getBoundingBox().top,
                 o2.get(0).element.getBoundingBox().top));
 
-        if (rows.size() < 5) {
+        if (rows.size() < kMIN_MATRIX_SIZE) {
             return null;
         }
 
@@ -242,24 +242,30 @@ public class Analyzer {
         for (List<Node> row : rows) {
             rowIndex += 1;
 
-            if (row.size() < 5) {
+            if (row.size() < kMIN_MATRIX_SIZE) {
+                Log.e("@#", "too small row");
                 continue;
             }
 
             List<List<Node>> columns = new ArrayList<>();
 
-            for (int i = 0; i < 5; i++) {
+            int size = find(Coord.column, row.get(kMIN_MATRIX_SIZE / 2).element.getBoundingBox().left,
+                    averageWidth, allNodes).size();
+
+
+            Log.e("@#", "deteced size " + size);
+
+            for (int i = 0; i < size; i++) {
                 List<Node> column = find(Coord.column, row.get(i).element.getBoundingBox().left,
                         averageWidth, allNodes);
-                if (column.size() < 5) {
+                if (column.size() < size) {
                     break;
                 }
-
 
                 columns.add(column);
             }
 
-            if (columns.size() == 5) {
+            if (columns.size() == size) {
                 MatrixResult result = new MatrixResult();
                 result.averageHeight = averageHeight;
                 result.averageWidth = averageWidth;
@@ -267,7 +273,7 @@ public class Analyzer {
 
                 List<List<Node>> matrix = new ArrayList<>();
 
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < size; i++) {
                     List<Node> resultRow = new ArrayList<>();
 
                     for (List<Node> column : columns) {
@@ -289,13 +295,15 @@ public class Analyzer {
                 result.matrix = matrix;
 
                 return result;
+            } else {
+                Log.e("@#", "disard row");
             }
         }
 
         throw new RuntimeException("Not found");
     }
 
-    private static List<Node> getElements(Text texts) {
+    private static List<Node> preprocessNodes(Text texts) {
         Pattern pattern = Pattern.compile("[0-9a-fA-F]{2}", Pattern.CASE_INSENSITIVE);
 
         List<Node> elements = new ArrayList<>();
