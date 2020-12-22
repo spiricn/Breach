@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -36,8 +37,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -86,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
         }
         String language = "eng";
 
+
     }
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -96,12 +101,37 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-            doOCR(imageBitmap);
+
+            ImageView im = findViewById(R.id.ocr_image);
+            im.setImageBitmap(imageBitmap);
+
+            Analyzer.analyze(imageBitmap, codeMatrx -> {
+                StringBuilder b = new StringBuilder();
+                for (List<Integer> line : codeMatrx.matrix) {
+                    for (Integer i : line) {
+                        b.append(Integer.toHexString(i) + " ");
+                    }
+                    b.append("\n");
+                }
+
+
+                Log.e("@#", b.toString());
+
+                TextView t = findViewById(
+                        R.id.ocr_text
+                );
+
+                t.setText(b.toString());
+            }, e -> {
+                Toast.makeText(this, "Error: " + e.toString(), Toast.LENGTH_LONG).show();
+            });
         }
     }
 
     @OnClick(R.id.scan_button)
     void onClickScanButton() {
+
+
         // check permissions
         if (!flagPermissions) {
             checkPermissions();
@@ -116,67 +146,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void runTextRecognition(Bitmap bmp) {
-        InputImage image = InputImage.fromBitmap(bmp, 0);
-        TextRecognizer recognizer = TextRecognition.getClient();
-//        mTextButton.setEnabled(false);
-        recognizer.process(image)
-                .addOnSuccessListener(
-                        new OnSuccessListener<Text>() {
-                            @Override
-                            public void onSuccess(Text texts) {
-                                Log.e("@#", "succ"+texts);
-//                                mTextButton.setEnabled(true);
-                                processTextRecognitionResult(texts);
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e("@#", "fail"+e);
-                                // Task failed with an exception
-//                                mTextButton.setEnabled(true);
-                                e.printStackTrace();
-                            }
-                        });
-    }
 
-    private void processTextRecognitionResult(Text texts) {
-        List<Text.TextBlock> blocks = texts.getTextBlocks();
-        if (blocks.size() == 0) {
-            Log.e("@# ", "no text");
-//            showToast("No text found");
-            return;
+    public static Bitmap getBitmapFromAsset(Context context, String filePath) {
+        AssetManager assetManager = context.getAssets();
+
+        InputStream istr;
+        Bitmap bitmap = null;
+        try {
+            istr = assetManager.open(filePath);
+            bitmap = BitmapFactory.decodeStream(istr);
+        } catch (IOException e) {
+            // handle exception
         }
-//        mGraphicOverlay.clear();
-        for (int i = 0; i < blocks.size(); i++) {
-            List<Text.Line> lines = blocks.get(i).getLines();
-            for (int j = 0; j < lines.size(); j++) {
-                List<Text.Element> elements = lines.get(j).getElements();
-                for (int k = 0; k < elements.size(); k++) {
-//                    Graphic textGraphic = new TextGraphic(mGraphicOverlay, elements.get(k));
-//                    mGraphicOverlay.add(textGraphic);
-                    Log.e("@#", "line " + elements.get(k).getText());
 
-                }
-            }
-        }
-    }
-
-    public File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("MMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
+        return bitmap;
     }
 
 
@@ -201,10 +184,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return true;
-    }
-
-    private void doOCR(final Bitmap bitmap) {
-        runTextRecognition(bitmap);
     }
 
 }

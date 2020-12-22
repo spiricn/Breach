@@ -1,12 +1,20 @@
 package com.limber.breach;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import static org.junit.Assert.*;
 
@@ -18,9 +26,49 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
     @Test
-    public void useAppContext() {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.limber.breach", appContext.getPackageName());
+    public void analyzeMatrix() throws ExecutionException, InterruptedException {
+        CompletableFuture<Analyzer.Result> f = new CompletableFuture<>();
+
+        Analyzer.analyze(BitmapFactory.decodeResource(InstrumentationRegistry.getInstrumentation().getTargetContext().getResources(),
+                R.drawable.matrix), f::complete, e -> f.complete(null));
+
+        List<List<Integer>> codeMatrix = f.get().matrix;
+        assertNotNull(codeMatrix);
+
+        assertEquals(5, codeMatrix.size());
+
+        for (List<Integer> row : codeMatrix) {
+            assertEquals(5, row.size());
+        }
+
+        assertEquals(Arrays.asList(
+                Arrays.asList(0x1c, 0xe9, 0x1c, 0x55, 0x1c),
+                Arrays.asList(0xe9, 0x55, 0x1c, 0x1c, 0xbd),
+                Arrays.asList(0x55, 0xbd, 0x1c, 0xbd, 0x55),
+                Arrays.asList(0x55, 0x1c, 0x55, 0x55, 0x1c),
+                Arrays.asList(0xe9, 0x1c, 0x1c, 0x1c, 0x55)
+        ).toArray(), codeMatrix.toArray());
+
+    }
+
+    @Test
+    public void analyzeAll() throws ExecutionException, InterruptedException {
+        CompletableFuture<Analyzer.Result> f = new CompletableFuture<>();
+
+        Analyzer.analyze(BitmapFactory.decodeResource(InstrumentationRegistry.getInstrumentation().getTargetContext().getResources(),
+                R.drawable.test1), f::complete, e -> f.complete(null));
+
+        List<List<Integer>> codeMatrix = f.get().matrix;
+        assertNotNull(codeMatrix);
+
+
+        assertEquals(Arrays.asList(
+                Arrays.asList(0x1c, 0xe9, 0x1c, 0x55, 0x1c),
+                Arrays.asList(0xe9, 0x55, 0x1c, 0x1c, 0xbd),
+                Arrays.asList(0x55, 0xbd, 0x1c, 0xbd, 0x55),
+                Arrays.asList(0x55, 0x1c, 0x55, 0x55, 0x1c),
+                Arrays.asList(0xe9, 0x1c, 0x1c, 0x1c, 0x55)
+        ).toArray(), codeMatrix.toArray());
+
     }
 }
