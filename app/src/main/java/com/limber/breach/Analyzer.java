@@ -165,22 +165,38 @@ public class Analyzer {
                 continue;
             }
 
+//            if ((node.element.getBoundingBox().top ) < matrixRes.boundingBox.top) {
+//                continue;
+//            }
+
+            if (node.element.getBoundingBox().bottom > matrixRes.boundingBox.bottom) {
+                continue;
+            }
+
             filteredNodes.add(node);
         }
 
+        result.sequences = convertRows(splitBy(Coord.row, matrixRes.averageWidth, filteredNodes));
+
         result.matrixBoundingBox = matrixRes.boundingBox;
-        result.matrix = new ArrayList<>();
-
-        for (List<Node> matrixRow : matrixRes.matrix) {
-            List<Integer> row = new ArrayList<>();
-            for (Node node : matrixRow) {
-                row.add(Integer.parseInt(node.element.getText(), 16));
-            }
-
-            result.matrix.add(row);
-        }
+        result.matrix = convertRows(matrixRes.matrix);
 
         return result;
+    }
+
+    static List<List<Integer>> convertRows(List<List<Node>> inRows) {
+        List<List<Integer>> rows = new ArrayList<>();
+
+        for (List<Node> row : inRows) {
+            List<Integer> irow = new ArrayList<>();
+            for (Node node : row) {
+                irow.add(Integer.parseInt(node.element.getText(), 16));
+            }
+
+            rows.add(irow);
+        }
+
+        return rows;
     }
 
 
@@ -188,6 +204,8 @@ public class Analyzer {
         List<Node> nodes;
         List<List<Node>> matrix;
         Rect boundingBox;
+        double averageWidth;
+        double averageHeight;
     }
 
     static class SequenceResult {
@@ -243,6 +261,8 @@ public class Analyzer {
 
             if (columns.size() == 5) {
                 MatrixResult result = new MatrixResult();
+                result.averageHeight = averageHeight;
+                result.averageWidth = averageWidth;
 
 
                 List<List<Node>> matrix = new ArrayList<>();
