@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/captureFragment">
+    <fragment
+        android:id="@+id/captureFragment"
+        android:name="com.limber.breach.CaptureFragment"
+        android:label="CaptureFragment" >
+        <action
+            android:id="@+id/action_captureFragment_self"
+            app:destination="@id/captureFragment" />
+        <action
+            android:id="@+id/action_captureFragment_to_analyzerFragment"
+            app:destination="@id/analyzerFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragmentVerify"
+        android:name="com.limber.breach.FragmentVerify"
+        android:label="FragmentVerify" >
+        <argument
+            android:name="verifyMatrix"
+            app:argType="boolean"
+            android:defaultValue="true" />
+        <argument
+            android:name="analyzeResult"
+            app:argType="com.limber.breach.Analyzer$Result" />
+        <action
+            android:id="@+id/action_fragmentVerify_to_captureFragment"
+            app:destination="@id/captureFragment" />
+        <action
+            android:id="@+id/action_fragmentVerify_to_solutionFragment"
+            app:destination="@id/solutionFragment" />
+        <action
+            android:id="@+id/action_fragmentVerify_self"
+            app:destination="@id/fragmentVerify" />
+    </fragment>
+    <fragment
+        android:id="@+id/analyzerFragment"
+        android:name="com.limber.breach.AnalyzerFragment"
+        android:label="AnalyzerFragment" >
+        <argument
+            android:name="bitmap"
+            app:argType="android.graphics.Bitmap" />
+        <action
+            android:id="@+id/action_analyzerFragment_to_captureFragment"
+            app:destination="@id/captureFragment" />
+        <action
+            android:id="@+id/action_analyzerFragment_to_fragmentVerify"
+            app:destination="@id/fragmentVerify" />
+    </fragment>
+    <fragment
+        android:id="@+id/solutionFragment"
+        android:name="com.limber.breach.SolutionFragment"
+        android:label="SolutionFragment" >
+        <argument
+            android:name="result"
+            app:argType="com.limber.breach.Analyzer$Result" />
+        <action
+            android:id="@+id/action_solutionFragment_to_captureFragment"
+            app:destination="@id/captureFragment" />
+    </fragment>
+</navigation>

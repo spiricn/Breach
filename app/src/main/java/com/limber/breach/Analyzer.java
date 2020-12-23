@@ -2,6 +2,8 @@ package com.limber.breach;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.util.Pair;
 
@@ -11,18 +13,134 @@ import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class Analyzer {
+    public static class GridNode implements Parcelable {
+        public String text;
+        public Rect boundingBox;
 
-    static class Result {
-        List<List<Integer>> matrix;
-        Rect matrixBoundingBox;
+        protected GridNode(Parcel in) {
+            text = in.readString();
+            boundingBox = in.readParcelable(Rect.class.getClassLoader());
+        }
 
-        List<List<Integer>> sequences;
-        Rect sequencesBoundingBox;
+        public static final Creator<GridNode> CREATOR = new Creator<GridNode>() {
+            @Override
+            public GridNode createFromParcel(Parcel in) {
+                return new GridNode(in);
+            }
+
+            @Override
+            public GridNode[] newArray(int size) {
+                return new GridNode[size];
+            }
+        };
+
+        public GridNode(String text, Rect boundingBox) {
+            this.text = text;
+            this.boundingBox = boundingBox;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int i) {
+            parcel.writeString(this.text);
+            this.boundingBox.writeToParcel(parcel, i);
+        }
+    }
+
+    public static class Grid implements Parcelable {
+        public List<List<GridNode>> nodes;
+        public Rect boundingBox;
+
+        protected Grid(Parcel in) {
+            boundingBox = in.readParcelable(Rect.class.getClassLoader());
+
+            nodes = new ArrayList<>();
+
+            int numRows = in.readInt();
+            for (int i = 0; i < numRows; i++) {
+                nodes.add(in.createTypedArrayList(GridNode.CREATOR));
+            }
+        }
+
+        public static final Creator<Grid> CREATOR = new Creator<Grid>() {
+            @Override
+            public Grid createFromParcel(Parcel in) {
+                return new Grid(in);
+            }
+
+            @Override
+            public Grid[] newArray(int size) {
+                return new Grid[size];
+            }
+        };
+
+        public Grid() {
+            this.nodes = new ArrayList<>();
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int i) {
+            parcel.writeInt(nodes.size());
+            for (List<GridNode> rows : this.nodes) {
+                parcel.writeArray(rows.toArray());
+            }
+
+            parcel.writeParcelable(boundingBox, i);
+        }
+    }
+
+    public static class Result implements Parcelable {
+        public Grid matrix;
+        public Grid sequences;
+        public Bitmap bitmap;
+
+        protected Result(Parcel in) {
+            matrix = in.readParcelable(Grid.class.getClassLoader());
+            sequences = in.readParcelable(Grid.class.getClassLoader());
+            bitmap = in.readParcelable(Bitmap.class.getClassLoader());
+        }
+
+        public Result() {
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeParcelable(matrix, flags);
+            dest.writeParcelable(sequences, flags);
+            dest.writeParcelable(bitmap, flags);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        public static final Creator<Result> CREATOR = new Creator<Result>() {
+            @Override
+            public Result createFromParcel(Parcel in) {
+                return new Result(in);
+            }
+
+            @Override
+            public Result[] newArray(int size) {
+                return new Result[size];
+            }
+        };
     }
 
 
@@ -45,11 +163,15 @@ public class Analyzer {
         recognizer.process(image)
                 .addOnSuccessListener(
                         texts -> {
+                            Result result;
                             try {
-                                successCallback.onAnalyzed(processTextRecognitionResult(texts));
+                                result = processTextRecognitionResult(texts);
                             } catch (Exception e) {
                                 failedCallback.onFailed(e);
+                                return;
                             }
+
+                            successCallback.onAnalyzed(result);
                         })
                 .addOnFailureListener(
                         failedCallback::onFailed);
@@ -81,6 +203,11 @@ public class Analyzer {
 
             return 0;
         }
+
+        public int value() {
+            return Integer.valueOf(element.getText(), 16);
+        }
+
     }
 
     class NodeRow {
@@ -152,20 +279,43 @@ public class Analyzer {
         return b.toString();
     }
 
+    static Grid convertGrid(List<List<Node>> nodes) {
+        Grid grid = new Grid();
+
+        for (List<Node> row : nodes) {
+            ArrayList<GridNode> resRow = new ArrayList<>();
+
+            for (Node node : row) {
+                if (grid.boundingBox == null) {
+                    grid.boundingBox = new Rect(node.element.getBoundingBox());
+                } else {
+                    grid.boundingBox.union(node.element.getBoundingBox());
+                }
+
+                resRow.add(new GridNode(node.element.getText(), node.element.getBoundingBox()));
+            }
+
+            grid.nodes.add(resRow);
+        }
+
+        return grid;
+    }
+
     private static Result processTextRecognitionResult(Text texts) {
         Result result = new Result();
 
         MatrixResult matrixRes = processMatrix(texts);
 
+        result.matrix = convertGrid(matrixRes.matrix);
+        result.bitmap = mBmp;
 
-        List<Node> filteredNodes = new ArrayList<>();
-
+        List<Node> sequenceNodes = new ArrayList<>();
         for (Node node : matrixRes.nodes) {
             if (node.element.getBoundingBox().intersect(matrixRes.boundingBox)) {
                 continue;
             }
 
-            if ((node.element.getBoundingBox().top ) < (matrixRes.boundingBox.top - matrixRes.averageHeight * 2)) {
+            if ((node.element.getBoundingBox().top) < (matrixRes.boundingBox.top - matrixRes.averageHeight * 2)) {
                 continue;
             }
 
@@ -173,31 +323,14 @@ public class Analyzer {
                 continue;
             }
 
-            filteredNodes.add(node);
+            sequenceNodes.add(node);
         }
 
-        result.sequences = convertRows(splitBy(Coord.row, matrixRes.averageWidth, filteredNodes));
-
-        result.matrixBoundingBox = matrixRes.boundingBox;
-        result.matrix = convertRows(matrixRes.matrix);
+        result.sequences = convertGrid(splitBy(Coord.row, matrixRes.averageWidth, sequenceNodes));
 
         return result;
     }
 
-    static List<List<Integer>> convertRows(List<List<Node>> inRows) {
-        List<List<Integer>> rows = new ArrayList<>();
-
-        for (List<Node> row : inRows) {
-            List<Integer> irow = new ArrayList<>();
-            for (Node node : row) {
-                irow.add(Integer.parseInt(node.element.getText(), 16));
-            }
-
-            rows.add(irow);
-        }
-
-        return rows;
-    }
 
 
     static class MatrixResult {
@@ -281,7 +414,7 @@ public class Analyzer {
                         resultRow.add(node);
 
                         if (result.boundingBox == null) {
-                            result.boundingBox = node.element.getBoundingBox();
+                            result.boundingBox = new Rect(node.element.getBoundingBox());
                         } else {
                             result.boundingBox.union(node.element.getBoundingBox());
                         }

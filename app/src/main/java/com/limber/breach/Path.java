@@ -54,6 +54,10 @@ public class Path {
         return builder.toString();
     }
 
+    public Set<Coordinate> coords() {
+        return mCoords;
+    }
+
     public Set<Coordinate> coordinates() {
         return mCoords;
     }
