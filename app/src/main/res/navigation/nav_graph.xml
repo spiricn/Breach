@@ -12,8 +12,8 @@
             android:id="@+id/action_captureFragment_self"
             app:destination="@id/captureFragment" />
         <action
-            android:id="@+id/action_captureFragment_to_analyzerFragment"
-            app:destination="@id/analyzerFragment" />
+            android:id="@+id/action_captureFragment_to_fragmentVerify"
+            app:destination="@id/fragmentVerify" />
     </fragment>
     <fragment
         android:id="@+id/fragmentVerify"
@@ -34,20 +34,6 @@
             app:destination="@id/solutionFragment" />
         <action
             android:id="@+id/action_fragmentVerify_self"
-            app:destination="@id/fragmentVerify" />
-    </fragment>
-    <fragment
-        android:id="@+id/analyzerFragment"
-        android:name="com.limber.breach.AnalyzerFragment"
-        android:label="AnalyzerFragment" >
-        <argument
-            android:name="bitmap"
-            app:argType="android.graphics.Bitmap" />
-        <action
-            android:id="@+id/action_analyzerFragment_to_captureFragment"
-            app:destination="@id/captureFragment" />
-        <action
-            android:id="@+id/action_analyzerFragment_to_fragmentVerify"
             app:destination="@id/fragmentVerify" />
     </fragment>
     <fragment

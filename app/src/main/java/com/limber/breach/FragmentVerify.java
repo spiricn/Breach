@@ -1,33 +1,21 @@
 package com.limber.breach;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextPaint;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 
@@ -50,7 +38,7 @@ public class FragmentVerify extends Fragment {
         mSurfaceView = view.findViewById(R.id.surfaceView);
 
         ((Button) view.findViewById(R.id.verify_confirm)).setOnClickListener(view1 -> {
-//
+
             if (!mArgs.getVerifyMatrix()) {
                 NavDirections action = FragmentVerifyDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());
 
@@ -71,17 +59,14 @@ public class FragmentVerify extends Fragment {
         mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-                if (mSurfaceHolder != null) {
-                    return;
-                }
-
                 mSurfaceHolder = surfaceHolder;
 
-                initialize();
+                draw();
             }
 
             @Override
             public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                draw();
             }
 
             @Override
@@ -96,7 +81,7 @@ public class FragmentVerify extends Fragment {
         Navigation.findNavController(getView()).navigate(action);
     }
 
-    void initialize() {
+    void draw() {
         Canvas canvas = mSurfaceHolder.lockCanvas();
 
         Paint boundaryPaint = new Paint();
@@ -135,7 +120,7 @@ public class FragmentVerify extends Fragment {
             b.append("\n");
         }
 
-        ((TextView) getView().findViewById(R.id.scannedResults)).setText(b.toString());
+//        ((TextView) getView().findViewById(R.id.scannedResults)).setText(b.toString());
     }
 
 

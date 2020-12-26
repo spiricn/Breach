@@ -9,6 +9,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -26,20 +27,21 @@ public class SolutionFragment extends Fragment {
     }
 
     SolutionFragmentArgs mArgs;
+    NumberPicker mNumberPicker;
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+
         mArgs = SolutionFragmentArgs.fromBundle(getArguments());
 
-
-        Snackbar.make(getView(),
-                "Solving, please wait .. ", Snackbar.LENGTH_LONG)
-                .show();
-
-        ((Button) view.findViewById(R.id.btnAgain)).setOnClickListener((View.OnClickListener) view1 -> {
+        ((Button) view.findViewById(R.id.btnRetry)).setOnClickListener((View.OnClickListener) view1 -> {
             NavDirections action = SolutionFragmentDirections.actionSolutionFragmentToCaptureFragment();
             Navigation.findNavController(getView()).navigate(action);
         });
+
+        mNumberPicker = view.findViewById(R.id.bufferSize);
+        mNumberPicker.setMaxValue(8);
+        mNumberPicker.setMinValue(4);
 
         ((SurfaceView) view.findViewById(R.id.solutionSurface)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -55,6 +57,25 @@ public class SolutionFragment extends Fragment {
             public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
             }
         });
+
+        ((Button) view.findViewById(R.id.btnSolve)).setOnClickListener((View.OnClickListener) v -> {
+
+
+            new Thread(() -> {
+                Analyzer.Result result = mArgs.getResult();
+
+                List<List<Integer>> matrix = convertRows(result.matrix.nodes);
+                List<List<Integer>> sequences = convertRows(result.sequences.nodes);
+
+
+                Snackbar.make(getView(),
+                        "[ BREACHING .. ]", Snackbar.LENGTH_LONG)
+                        .show();
+
+                PathScore path = Solver.solve(matrix, sequences, mNumberPicker.getValue());
+                showResult(path);
+            }).start();
+        });
     }
 
     SurfaceHolder mHolder;
@@ -69,24 +90,9 @@ public class SolutionFragment extends Fragment {
         DrawUtils.drawGrid(result.matrix, result.bitmap, canvas);
 
         holder.unlockCanvasAndPost(canvas);
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<List<Integer>> matrix = convertRows(result.matrix.nodes);
-                List<List<Integer>> sequences = convertRows(result.sequences.nodes);
-
-                PathScore path = Solver.solve(matrix, sequences, 7);
-                showResult(path);
-            }
-        }).start();
     }
 
     void showResult(PathScore pathScore) {
-        Snackbar.make(getView(),
-                "Solved", Snackbar.LENGTH_SHORT)
-                .show();
 
         Path path = pathScore.path();
 
@@ -104,7 +110,7 @@ public class SolutionFragment extends Fragment {
 
             Analyzer.GridNode resNode = mArgs.getResult().matrix.nodes.get(coord.row).get(coord.column);
 
-            canvas.drawText("S " + stepCounter, resNode.boundingBox.left, resNode.boundingBox.top, textPaint);
+            canvas.drawText("" + stepCounter, resNode.boundingBox.left, resNode.boundingBox.top, textPaint);
 
             stepCounter++;
         }

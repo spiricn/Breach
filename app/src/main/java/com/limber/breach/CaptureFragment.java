@@ -2,6 +2,7 @@ package com.limber.breach;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -15,50 +16,42 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
 
 public class CaptureFragment extends Fragment {
-    static public class BitmapCaptureModel extends ViewModel {
-        private final MutableLiveData<Bitmap> mCapturedBitmap = new MutableLiveData<>();
-
-        public BitmapCaptureModel() {
-            super();
-        }
-
-        public void capture(Bitmap bitmap) {
-            mCapturedBitmap.setValue(bitmap);
-        }
-
-        public LiveData<Bitmap> getCapturedBitmap() {
-            return mCapturedBitmap;
-        }
-    }
-
     public CaptureFragment() {
         super(R.layout.fragment_capture);
     }
 
+    Button mButton;
+
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        mModel = new ViewModelProvider((requireActivity())).get(BitmapCaptureModel.class);
+        mButton = view.findViewById(R.id.camera_capture_button);
+        mButton.setEnabled(false);
+
+        mButton.setOnClickListener((View.OnClickListener) view1 -> {
+            capture();
+        });
 
         initialize();
 
-        ((Button) view.findViewById(R.id.camera_capture_button)).setOnClickListener((View.OnClickListener) view1 -> {
-            capture();
-        });
+//        onCaptured(BitmapFactory.decodeResource(getResources(), R.drawable.test_6x6_1_01));
     }
 
     private void capture() {
+        mButton.setEnabled(false);
+        if (mSnackbar != null) {
+            mSnackbar.dismiss();
+        }
+
         mImageCapture.takePicture(
                 ContextCompat.getMainExecutor(getActivity()),
                 new ImageCapture.OnImageCapturedCallback() {
@@ -68,16 +61,32 @@ public class CaptureFragment extends Fragment {
                         byte[] bytes = new byte[planeProxy.getBuffer().remaining()];
                         planeProxy.getBuffer().get(bytes);
 
-                        NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToAnalyzerFragment(
-                                BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
-
-                        Navigation.findNavController(getView()).navigate(action);
-
                         super.onCaptureSuccess(image);
+
+                        onCaptured(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
                     }
                 }
         );
     }
+
+    void onCaptured(Bitmap bitmap) {
+        Analyzer.analyze(bitmap, result -> {
+            NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToFragmentVerify(result);
+
+            Navigation.findNavController(getView()).navigate(action);
+        }, error -> {
+            mSnackbar = Snackbar.make(getView(),
+                    "[ TRY AGAIN ]", Snackbar.LENGTH_SHORT)
+                    .setBackgroundTint(Color.argb(125, 255, 60, 60))
+                    .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE);
+            mSnackbar.show();
+
+            mButton.setEnabled(true);
+        });
+    }
+
+    Snackbar mSnackbar = null;
+
 
     void initialize() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(getActivity());
@@ -109,9 +118,10 @@ public class CaptureFragment extends Fragment {
             cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, mImageCapture);
 
+            mButton.setEnabled(true);
+
         }, ContextCompat.getMainExecutor(getActivity()));
     }
 
     private ImageCapture mImageCapture;
-    private BitmapCaptureModel mModel;
 }
