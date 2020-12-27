@@ -2,6 +2,7 @@ package com.limber.breach.fragments;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,8 +26,10 @@ import com.limber.breach.SoundPlayer;
 import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.GridNode;
 import com.limber.breach.analyzer.Result;
+import com.limber.breach.fragments.grid.AGridAnimation;
+import com.limber.breach.fragments.grid.SolutionAnimation;
+import com.limber.breach.fragments.grid.WorkingAnimation;
 import com.limber.breach.solver.Coordinate;
-import com.limber.breach.solver.Path;
 import com.limber.breach.solver.PathScore;
 import com.limber.breach.solver.Solver;
 
@@ -34,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Random;
 
 public class SolutionFragment extends Fragment {
     public SolutionFragment() {
@@ -49,8 +53,12 @@ public class SolutionFragment extends Fragment {
     SolutionFragmentArgs mArgs;
     Button mSolveButton;
     Button mRetryButton;
+    Button mIncraseBufferButton;
+    Button mDecreaseBufferButton;
     long mSolveStartTimestamp;
     Handler mDelayHandler;
+
+    AGridAnimation mCurrentAnimation = null;
 
     @Override
     public void onDestroyView() {
@@ -84,8 +92,11 @@ public class SolutionFragment extends Fragment {
 
         setBufferSize(kSTART_BUFFER_SIZE);
 
-        view.findViewById(R.id.buttonDecreaseBuffer).setOnClickListener(view12 -> changeBufferSize(-1));
-        view.findViewById(R.id.buttonIncreaseBuffer).setOnClickListener(view12 -> changeBufferSize(1));
+        mDecreaseBufferButton = view.findViewById(R.id.buttonDecreaseBuffer);
+        mDecreaseBufferButton.setOnClickListener(view12 -> changeBufferSize(-1));
+
+        mIncraseBufferButton = view.findViewById(R.id.buttonIncreaseBuffer);
+        mIncraseBufferButton.setOnClickListener(view12 -> changeBufferSize(1));
 
         ((SurfaceView) view.findViewById(R.id.solutionSurface)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -109,9 +120,13 @@ public class SolutionFragment extends Fragment {
 
             stop();
 
+            mCurrentAnimation = new WorkingAnimation(this, mHolder, mArgs.getResult());
+            mCurrentAnimation.start();
+
             Vibrator.get().play(Vibrator.Effect.ok);
 
-            mSolveButton.setEnabled(false);
+            setInputEnabled(false);
+
             ProgressBar progressBar = requireView().findViewById(R.id.progressBar);
             mRetryButton.setText(R.string.btnCancel);
 
@@ -121,8 +136,14 @@ public class SolutionFragment extends Fragment {
 
             draw();
 
+            Canvas canvas = mHolder.lockCanvas();
 
             Result result = mArgs.getResult();
+
+            DrawUtils.highlightNodes(result.matrix, canvas);
+
+            mHolder.unlockCanvasAndPost(canvas);
+
 
             List<List<Integer>> matrix = convertRows(result.matrix.nodes);
             List<List<Integer>> sequences = convertRows(result.sequences.nodes);
@@ -139,7 +160,10 @@ public class SolutionFragment extends Fragment {
 
                     Runnable resultRunnable = () -> {
                         stop();
-                        showResult(result);
+
+                        mCurrentAnimation = new SolutionAnimation(SolutionFragment.this, mHolder, mArgs.getResult(), result);
+                        mCurrentAnimation.start();
+
                         Vibrator.get().play(Vibrator.Effect.success);
                     };
 
@@ -158,6 +182,12 @@ public class SolutionFragment extends Fragment {
     SurfaceHolder mHolder;
     Solver mSolver;
     int mBufferSize = 4;
+
+    void setInputEnabled(boolean enabled) {
+        mSolveButton.setEnabled(enabled);
+        mIncraseBufferButton.setEnabled(enabled);
+        mDecreaseBufferButton.setEnabled(enabled);
+    }
 
     void changeBufferSize(int delta) {
         SoundPlayer.get().play(SoundPlayer.Effect.short_beep);
@@ -194,8 +224,13 @@ public class SolutionFragment extends Fragment {
         }
 
         requireView().findViewById(R.id.progressBar).setVisibility(View.GONE);
-        mSolveButton.setEnabled(true);
+        setInputEnabled(true);
         mRetryButton.setText(R.string.btnRetry);
+
+        if (mCurrentAnimation != null) {
+            mCurrentAnimation.stop();
+            mCurrentAnimation = null;
+        }
     }
 
 
@@ -210,33 +245,11 @@ public class SolutionFragment extends Fragment {
 
         holder.unlockCanvasAndPost(canvas);
     }
-
-    void showResult(PathScore pathScore) {
-        SoundPlayer.get().play(SoundPlayer.Effect.success);
-
-        Path path = pathScore.path();
-
-        Canvas canvas = mHolder.lockCanvas();
-
-        DrawUtils.drawGrid(mArgs.getResult().matrix, mArgs.getResult().bitmap, canvas);
-
-        TextPaint textPaint = new TextPaint();
-        textPaint.setTextSize(60);
-        textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
-        textPaint.setColor(Color.argb(200, 255, 0, 0));
-
-        int stepCounter = 0;
-        for (Coordinate coord : path.coordinates()) {
-
-            GridNode resNode = mArgs.getResult().matrix.nodes.get(coord.row).get(coord.column);
-
-            canvas.drawText("" + stepCounter, resNode.boundingBox.left, resNode.boundingBox.top, textPaint);
-
-            stepCounter++;
-        }
-
-        mHolder.unlockCanvasAndPost(canvas);
-    }
+//
+//    void showResult(PathScore pathScore) {
+//        SoundPlayer.get().play(SoundPlayer.Effect.success);
+//
+//    }
 
 
     static List<List<Integer>> convertRows(List<List<GridNode>> inRows) {

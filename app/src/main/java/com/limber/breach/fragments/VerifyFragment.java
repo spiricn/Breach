@@ -102,6 +102,7 @@ public class VerifyFragment extends Fragment {
         Grid grid = mArgs.getVerifyMatrix() ? result.matrix : result.sequences;
 
         DrawUtils.drawGrid(grid, result.bitmap, canvas);
+        DrawUtils.highlightNodes(grid, canvas);
 
         TextPaint textPaint = new TextPaint();
         textPaint.setTextSize(60);

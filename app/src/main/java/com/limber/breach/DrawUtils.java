@@ -40,25 +40,34 @@ public class DrawUtils {
     }
 
     public static void drawGrid(Grid grid, Bitmap bitmap, Canvas canvas) {
-
-        Paint boundaryPaint = new Paint();
-        boundaryPaint.setColor(Color.GREEN);
-        boundaryPaint.setStyle(Paint.Style.STROKE);
-        boundaryPaint.setStrokeWidth(2);
-
         Rect rect = getRect(grid);
+
         canvas.drawBitmap(
                 bitmap,
                 rect,
                 canvas.getClipBounds(),
                 new Paint()
         );
+    }
 
-        scaleFor(canvas, rect);
+    public static void highlightNodes(Grid grid, Canvas canvas) {
+        Paint boundaryPaint = new Paint();
+        boundaryPaint.setColor(Color.GREEN);
+        boundaryPaint.setStyle(Paint.Style.STROKE);
+        boundaryPaint.setStrokeWidth(2);
+
+
+        highlightNodes(grid, canvas, null, boundaryPaint);
+    }
+
+    public static void highlightNodes(Grid grid, Canvas canvas, List<GridNode> nodes, Paint boundaryPaint) {
+        scaleFor(canvas, getRect(grid));
 
         for (List<GridNode> nodeRow : grid.nodes) {
             for (GridNode node : nodeRow) {
-                canvas.drawRect(node.boundingBox, boundaryPaint);
+                if (nodes == null || nodes.contains(node)) {
+                    canvas.drawRect(node.boundingBox, boundaryPaint);
+                }
             }
         }
     }
