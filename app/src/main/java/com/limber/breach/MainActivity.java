@@ -17,6 +17,8 @@ import androidx.navigation.Navigation;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.IOException;
+
 public class MainActivity extends AppCompatActivity {
     private static final String kTAG = MainActivity.class.getSimpleName();
 
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SoundPlayer.create(this);
 
         // Make application fullscreen
         getWindow().setFlags(

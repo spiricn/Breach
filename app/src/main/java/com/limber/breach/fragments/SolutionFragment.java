@@ -24,6 +24,7 @@ import androidx.navigation.Navigation;
 import com.limber.breach.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
+import com.limber.breach.SoundPlayer;
 import com.limber.breach.solver.Coordinate;
 import com.limber.breach.solver.Path;
 import com.limber.breach.solver.PathScore;
@@ -55,6 +56,8 @@ public class SolutionFragment extends Fragment {
         mRetryButton = view.findViewById(R.id.btnRetry);
 
         mRetryButton.setOnClickListener(view1 -> {
+            SoundPlayer.get().play(SoundPlayer.Effect.cancel);
+
             if (mSolver != null) {
                 stop();
                 return;
@@ -66,8 +69,8 @@ public class SolutionFragment extends Fragment {
 
         setBufferSize(kSTART_BUFFER_SIZE);
 
-        view.findViewById(R.id.buttonDecreaseBuffer).setOnClickListener(view12 -> setBufferSize(mBufferSize - 1));
-        view.findViewById(R.id.buttonIncreaseBuffer).setOnClickListener(view12 -> setBufferSize(mBufferSize + 1));
+        view.findViewById(R.id.buttonDecreaseBuffer).setOnClickListener(view12 -> changeBufferSize(-1));
+        view.findViewById(R.id.buttonIncreaseBuffer).setOnClickListener(view12 -> changeBufferSize(1));
 
         ((SurfaceView) view.findViewById(R.id.solutionSurface)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -87,7 +90,6 @@ public class SolutionFragment extends Fragment {
         mSolveButton = view.findViewById(R.id.btnSolve);
 
         view.findViewById(R.id.btnSolve).setOnClickListener(v -> {
-            Log.e("@#", "solve clicked");
             stop();
 
             mSolveButton.setEnabled(false);
@@ -95,6 +97,8 @@ public class SolutionFragment extends Fragment {
             mRetryButton.setText(R.string.cancel);
 
             progressBar.setVisibility(View.VISIBLE);
+
+            SoundPlayer.get().play(SoundPlayer.Effect.working, true);
 
             draw();
 
@@ -106,12 +110,11 @@ public class SolutionFragment extends Fragment {
             mSolver = new Solver(matrix, sequences, mBufferSize, new Solver.IListener() {
                 @Override
                 public void onAborted() {
-                    Log.e("@#", "aborted");
+                    stop();
                 }
 
                 @Override
                 public void onSolved(PathScore result) {
-                    Log.e("@#", "solved");
                     stop();
                     showResult(result);
                 }
@@ -124,6 +127,11 @@ public class SolutionFragment extends Fragment {
     SurfaceHolder mHolder;
     Solver mSolver;
     int mBufferSize = 4;
+
+    void changeBufferSize(int delta) {
+        SoundPlayer.get().play(SoundPlayer.Effect.short_beep);
+        setBufferSize(mBufferSize + delta);
+    }
 
     void setBufferSize(int bufferSize) {
         mBufferSize = bufferSize;
@@ -150,6 +158,8 @@ public class SolutionFragment extends Fragment {
             mSolver = null;
         }
 
+        SoundPlayer.get().stop();
+
         requireView().findViewById(R.id.progressBar).setVisibility(View.GONE);
         mSolveButton.setEnabled(true);
         mRetryButton.setText(R.string.retry);
@@ -169,6 +179,7 @@ public class SolutionFragment extends Fragment {
     }
 
     void showResult(PathScore pathScore) {
+        SoundPlayer.get().play(SoundPlayer.Effect.success);
 
         Path path = pathScore.path();
 

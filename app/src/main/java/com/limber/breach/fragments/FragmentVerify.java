@@ -19,6 +19,7 @@ import androidx.navigation.Navigation;
 import com.limber.breach.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
+import com.limber.breach.SoundPlayer;
 
 import java.util.List;
 
@@ -40,7 +41,8 @@ public class FragmentVerify extends Fragment {
 
         mSurfaceView = view.findViewById(R.id.surfaceView);
 
-        ((Button) view.findViewById(R.id.verify_confirm)).setOnClickListener(view1 -> {
+        view.findViewById(R.id.verify_confirm).setOnClickListener(view1 -> {
+            SoundPlayer.get().play(SoundPlayer.Effect.beep);
 
             if (!mArgs.getVerifyMatrix()) {
                 NavDirections action = FragmentVerifyDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());
@@ -55,9 +57,7 @@ public class FragmentVerify extends Fragment {
             }
         });
 
-        ((Button) view.findViewById(R.id.verify_retry)).setOnClickListener(view1 -> {
-            retry();
-        });
+        view.findViewById(R.id.verify_retry).setOnClickListener(view1 -> retry());
 
         mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -79,8 +79,9 @@ public class FragmentVerify extends Fragment {
     }
 
     void retry() {
-        NavDirections action = FragmentVerifyDirections.actionFragmentVerifyToCaptureFragment();
+        SoundPlayer.get().play(SoundPlayer.Effect.cancel);
 
+        NavDirections action = FragmentVerifyDirections.actionFragmentVerifyToCaptureFragment();
         Navigation.findNavController(getView()).navigate(action);
     }
 

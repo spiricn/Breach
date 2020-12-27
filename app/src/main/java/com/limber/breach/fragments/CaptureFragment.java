@@ -24,6 +24,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.limber.breach.Analyzer;
 import com.limber.breach.R;
+import com.limber.breach.SoundPlayer;
 
 import java.util.concurrent.ExecutionException;
 
@@ -71,10 +72,12 @@ public class CaptureFragment extends Fragment {
 
     void onCaptured(Bitmap bitmap) {
         Analyzer.analyze(bitmap, result -> {
+            SoundPlayer.get().play(SoundPlayer.Effect.success);
             NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToFragmentVerify(result);
-
             Navigation.findNavController(requireView()).navigate(action);
         }, error -> {
+            SoundPlayer.get().play(SoundPlayer.Effect.error);
+
             mSnackbar = Snackbar.make(requireView(),
                     "[ TRY AGAIN ]", Snackbar.LENGTH_SHORT)
                     .setBackgroundTint(Color.argb(125, 255, 60, 60))
