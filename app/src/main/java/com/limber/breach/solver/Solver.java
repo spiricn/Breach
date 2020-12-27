@@ -1,27 +1,87 @@
 package com.limber.breach.solver;
 
+import android.os.Handler;
+
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 public class Solver {
+    List<List<Integer>> mSequences;
+    int mBufferSize;
+    List<List<Integer>> mCodeMatrix;
+    boolean mRunning = false;
+    Thread mThread;
+    IListener mListener;
+    Handler mCallbackHandler;
 
+    public interface IListener {
+        void onAborted();
 
-    public static PathScore solve(List<List<Integer>> codeMatrix, List<List<Integer>> sequences, int bufferSize) {
-        List<Path> paths = generatePaths(codeMatrix, bufferSize);
+        void onSolved(PathScore result);
+    }
 
-        PathScore maxScore = null;
+    public Solver(@NonNull List<List<Integer>> codeMatrix, @NonNull List<List<Integer>> sequences,
+                  int bufferSize, @NonNull IListener listener, Handler callbackHandler) {
+        mCodeMatrix = codeMatrix;
+        mSequences = sequences;
+        mBufferSize = bufferSize;
+        mListener = listener;
+        mCallbackHandler = callbackHandler;
+    }
+
+    public void start() {
+        if (mRunning) {
+            throw new RuntimeException("Already running");
+        }
+
+        mRunning = true;
+
+        mThread = new Thread(() -> {
+            try {
+                PathScore result = solve();
+                mCallbackHandler.post(() -> mListener.onSolved(result));
+
+            } catch (InterruptedException e) {
+                mCallbackHandler.post(() -> mListener.onAborted());
+            }
+        });
+        mThread.start();
+    }
+
+    public void stop() {
+        if (!mRunning) {
+            return;
+        }
+
+        mRunning = false;
+
+        try {
+            mThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private PathScore solve() throws InterruptedException {
+        List<Path> paths = generatePaths(mCodeMatrix, mBufferSize);
+
+        PathScore result = null;
         for (Path path : paths) {
-            PathScore c = new PathScore(path, sequences, bufferSize, codeMatrix);
-            if (maxScore == null || c.score() > maxScore.score()) {
-                maxScore = c;
+            checkRunning();
+
+            PathScore c = new PathScore(path, mSequences, mBufferSize, mCodeMatrix);
+            if (result == null || c.score() > result.score()) {
+                result = c;
             }
         }
 
-        return maxScore;
+        return result;
     }
 
-    private static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix) {
+    static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix) {
         return candidateCoords(codeMatrix, 0, Coordinate.from(0, 0));
     }
 
@@ -31,7 +91,7 @@ public class Solver {
      * first row. For the second turn, it would return the nth column, with n
      * being the coordinate's row
      */
-    private static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix, int turn, Coordinate coordinate) {
+    static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix, int turn, Coordinate coordinate) {
         List<Coordinate> coords = new ArrayList<>();
 
         for (int i = 0; i < codeMatrix.size(); i++) {
@@ -42,7 +102,6 @@ public class Solver {
                 coord = new Coordinate(i, coordinate.column);
             }
 
-//            System.out.println("generate " + coord);
             coords.add(coord);
         }
 
@@ -52,7 +111,7 @@ public class Solver {
     /**
      * Returns all possible paths with size equal to the buffer
      */
-    private static List<Path> generatePaths(List<List<Integer>> codeMatrix, int bufferSize) {
+    private List<Path> generatePaths(List<List<Integer>> codeMatrix, int bufferSize) throws InterruptedException {
         Stack<Path> partialPathsStack = new Stack<>();
         partialPathsStack.push(new Path());
 
@@ -65,27 +124,17 @@ public class Solver {
         return completedPaths;
     }
 
-    static void walkPaths(List<List<Integer>> codeMatrix, int bufferSize, List<Path> completedPaths,
-                          Stack<Path> partialPathsStack, int turn, List<Coordinate> candidateCoords) {
-//        System.out.println(">>>>>>>>>>>>>>>");
+    void walkPaths(List<List<Integer>> codeMatrix, int bufferSize, List<Path> completedPaths,
+                   Stack<Path> partialPathsStack, int turn, List<Coordinate> candidateCoords) throws InterruptedException {
         Path path = partialPathsStack.pop();
 
-//        for (Coordinate coord : candidateCoords) {
-//            System.out.print(" " + coord + ",");
-//        }
-//        System.out.print("\n");
-
-
         for (Coordinate coord : candidateCoords) {
-//            System.out.println("push " + coord);
+            checkRunning();
+
             Path newPath = path.add(new Path(coord));
-
-
-//            System.out.println("path " + newPath);
 
             if (newPath == null) {
                 // Skip coordinate if it has already been visited
-//                System.out.println("skip");
                 continue;
             }
 
@@ -94,14 +143,7 @@ public class Solver {
                 completedPaths.add(newPath);
             } else {
                 // Add new, lengthier partial path back into the stack
-//                System.out.println(newPath.toString());
                 partialPathsStack.push(newPath);
-//
-//                try {
-//                    Thread.sleep(500);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
 
                 walkPaths(
                         codeMatrix, bufferSize, completedPaths, partialPathsStack, turn + 1,
@@ -112,6 +154,10 @@ public class Solver {
         }
     }
 
-    private List<List<Character>> mCodeMatrix;
-//    private List<Path> mCompletedPath = new ArrayList<>();
+    private void checkRunning() throws InterruptedException {
+        if (!mRunning) {
+            throw new InterruptedException();
+        }
+    }
+
 }

@@ -4,11 +4,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextPaint;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.Button;
 import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
@@ -27,6 +28,7 @@ import com.limber.breach.solver.Solver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SolutionFragment extends Fragment {
     public SolutionFragment() {
@@ -39,11 +41,11 @@ public class SolutionFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
 
-        mArgs = SolutionFragmentArgs.fromBundle(getArguments());
+        mArgs = SolutionFragmentArgs.fromBundle(requireArguments());
 
-        ((Button) view.findViewById(R.id.btnRetry)).setOnClickListener((View.OnClickListener) view1 -> {
+        view.findViewById(R.id.btnRetry).setOnClickListener(view1 -> {
             NavDirections action = SolutionFragmentDirections.actionSolutionFragmentToCaptureFragment();
-            Navigation.findNavController(getView()).navigate(action);
+            Navigation.findNavController(requireView()).navigate(action);
         });
 
         mNumberPicker = view.findViewById(R.id.bufferSize);
@@ -65,27 +67,46 @@ public class SolutionFragment extends Fragment {
             }
         });
 
-        ((Button) view.findViewById(R.id.btnSolve)).setOnClickListener((View.OnClickListener) v -> {
+        view.findViewById(R.id.btnSolve).setOnClickListener(v -> {
+            if (mSolver != null) {
+                mSolver.stop();
+            }
 
+            draw();
 
-            new Thread(() -> {
-                Analyzer.Result result = mArgs.getResult();
+            Analyzer.Result result = mArgs.getResult();
 
-                List<List<Integer>> matrix = convertRows(result.matrix.nodes);
-                List<List<Integer>> sequences = convertRows(result.sequences.nodes);
+            List<List<Integer>> matrix = convertRows(result.matrix.nodes);
+            List<List<Integer>> sequences = convertRows(result.sequences.nodes);
 
+            Snackbar.make(requireView(),
+                    "[ BREACHING .. ]", Snackbar.LENGTH_LONG)
+                    .show();
 
-                Snackbar.make(getView(),
-                        "[ BREACHING .. ]", Snackbar.LENGTH_LONG)
-                        .show();
+            mSolver = new Solver(matrix, sequences, mNumberPicker.getValue(), new Solver.IListener() {
+                @Override
+                public void onAborted() {
+                }
 
-                PathScore path = Solver.solve(matrix, sequences, mNumberPicker.getValue());
-                showResult(path);
-            }).start();
+                @Override
+                public void onSolved(PathScore result) {
+
+                    showResult(result);
+                }
+            }, new Handler(Looper.getMainLooper()));
+
+            mSolver.start();
         });
     }
 
     SurfaceHolder mHolder;
+    Solver mSolver;
+
+    void draw() {
+        Objects.requireNonNull(mHolder);
+        draw(mHolder);
+    }
+
 
     void draw(SurfaceHolder holder) {
         mHolder = holder;
