@@ -46,13 +46,9 @@ public class Path {
         return builder.toString();
     }
 
-    public Set<Coordinate> coords() {
-        return mCoords;
-    }
-
     public Set<Coordinate> coordinates() {
         return mCoords;
     }
 
-    private Set<Coordinate> mCoords = new LinkedHashSet<>();
+    private final Set<Coordinate> mCoords = new LinkedHashSet<>();
 }

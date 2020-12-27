@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;

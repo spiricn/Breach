@@ -18,7 +18,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragmentVerify"
-        android:name="com.limber.breach.fragments.FragmentVerify"
+        android:name="com.limber.breach.fragments.VerifyFragment"
         android:label="FragmentVerify" >
         <argument
             android:name="verifyMatrix"

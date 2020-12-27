@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
@@ -25,11 +24,11 @@ import com.limber.breach.analyzer.Result;
 
 import java.util.List;
 
-public class FragmentVerify extends Fragment {
+public class VerifyFragment extends Fragment {
 
-    FragmentVerifyArgs mArgs;
+    VerifyFragmentArgs mArgs;
 
-    public FragmentVerify() {
+    public VerifyFragment() {
         super(R.layout.fragment_verify);
     }
 
@@ -39,7 +38,7 @@ public class FragmentVerify extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        mArgs = FragmentVerifyArgs.fromBundle(getArguments());
+        mArgs = VerifyFragmentArgs.fromBundle(requireArguments());
 
         mSurfaceView = view.findViewById(R.id.surfaceView);
 
@@ -47,15 +46,15 @@ public class FragmentVerify extends Fragment {
             SoundPlayer.get().play(SoundPlayer.Effect.beep);
 
             if (!mArgs.getVerifyMatrix()) {
-                NavDirections action = FragmentVerifyDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());
+                NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());
 
-                Navigation.findNavController(getView()).navigate(action);
+                Navigation.findNavController(requireView()).navigate(action);
             } else {
-                NavDirections action = FragmentVerifyDirections.actionFragmentVerifySelf(
+                NavDirections action = VerifyFragmentDirections.actionFragmentVerifySelf(
                         mArgs.getAnalyzeResult()
                 ).setVerifyMatrix(false);
 
-                Navigation.findNavController(getView()).navigate(action);
+                Navigation.findNavController(requireView()).navigate(action);
             }
         });
 
@@ -83,8 +82,8 @@ public class FragmentVerify extends Fragment {
     void retry() {
         SoundPlayer.get().play(SoundPlayer.Effect.cancel);
 
-        NavDirections action = FragmentVerifyDirections.actionFragmentVerifyToCaptureFragment();
-        Navigation.findNavController(getView()).navigate(action);
+        NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToCaptureFragment();
+        Navigation.findNavController(requireView()).navigate(action);
     }
 
     void draw() {

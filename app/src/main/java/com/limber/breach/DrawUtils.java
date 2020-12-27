@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
-import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.analyzer.Grid;
 import com.limber.breach.analyzer.GridNode;
 

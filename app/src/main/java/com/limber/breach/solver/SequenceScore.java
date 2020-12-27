@@ -63,9 +63,9 @@ public class SequenceScore {
         return mScore;
     }
 
-    private int mMaxProgress;
-    private List<Integer> mSequence;
-    private int mScore = 0;
-    private int mRewardLevel = 0;
-    private int mBufferSize = 0;
+    private final int mMaxProgress;
+    private final List<Integer> mSequence;
+    private int mScore;
+    private final int mRewardLevel;
+    private int mBufferSize;
 }

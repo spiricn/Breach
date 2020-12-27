@@ -5,8 +5,9 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 public class Coordinate {
-    public int row = -1;
-    public int column = -1;
+    public int row;
+
+    public int column;
 
     Coordinate(int row, int column) {
         this.row = row;
@@ -22,7 +23,6 @@ public class Coordinate {
         return Objects.hash(row, column);
     }
 
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -32,13 +32,11 @@ public class Coordinate {
         if (getClass() != obj.getClass())
             return false;
         Coordinate other = (Coordinate) obj;
-        if (column != other.column)
+        if (column != other.column) {
             return false;
-        if (row != other.row)
-            return false;
-        return true;
+        }
+        return row == other.row;
     }
-
 
     @NonNull
     @Override

@@ -13,16 +13,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.navigation.NavDirections;
-import androidx.navigation.Navigation;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.IOException;
-
 public class MainActivity extends AppCompatActivity {
-    private static final String kTAG = MainActivity.class.getSimpleName();
-
     private static final int REQUEST_CODE_PERMISSIONS = 10;
 
     private static final String[] PERMISSIONS = {
@@ -48,11 +42,12 @@ public class MainActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
-        if (!allPermissionsGranted()) {
-            checkPermissions();
-        } else {
+        if (allPermissionsGranted()) {
             start();
+            return;
         }
+
+        checkPermissions();
     }
 
     void start() {
