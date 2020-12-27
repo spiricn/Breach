@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.solver;
 
 import androidx.annotation.NonNull;
 

@@ -6,7 +6,7 @@
     app:startDestination="@id/captureFragment">
     <fragment
         android:id="@+id/captureFragment"
-        android:name="com.limber.breach.CaptureFragment"
+        android:name="com.limber.breach.fragments.CaptureFragment"
         android:label="CaptureFragment" >
         <action
             android:id="@+id/action_captureFragment_self"
@@ -17,7 +17,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragmentVerify"
-        android:name="com.limber.breach.FragmentVerify"
+        android:name="com.limber.breach.fragments.FragmentVerify"
         android:label="FragmentVerify" >
         <argument
             android:name="verifyMatrix"
@@ -38,7 +38,7 @@
     </fragment>
     <fragment
         android:id="@+id/solutionFragment"
-        android:name="com.limber.breach.SolutionFragment"
+        android:name="com.limber.breach.fragments.SolutionFragment"
         android:label="SolutionFragment" >
         <argument
             android:name="result"

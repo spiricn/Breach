@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.solver;
 
 
 import androidx.annotation.NonNull;
@@ -19,17 +19,9 @@ public class Path {
     }
 
     public Path add(Path other) {
-        Set<Coordinate> newCoords = new LinkedHashSet<>();
-        newCoords.addAll(mCoords);
-
-//        for(Coordinate c : newCoords){
-//            System.out.println("bla " + c);
-//        }
-
-//        System.out.println("add " + mCoords.size() + " " + other.mCoords.size());
+        Set<Coordinate> newCoords = new LinkedHashSet<>(mCoords);
 
         for (Coordinate otherCoord : other.mCoords) {
-//            System.out.println("bla2 " + otherCoord);
             if (!newCoords.add(otherCoord)) {
                 return null;
             }

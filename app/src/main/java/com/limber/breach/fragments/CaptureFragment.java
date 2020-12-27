@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.fragments;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +22,8 @@ import androidx.navigation.Navigation;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.limber.breach.Analyzer;
+import com.limber.breach.R;
 
 import java.util.concurrent.ExecutionException;
 

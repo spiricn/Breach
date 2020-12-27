@@ -1,10 +1,11 @@
 package com.limber.breach;
 
-import android.util.Log;
+import com.limber.breach.solver.Coordinate;
+import com.limber.breach.solver.PathScore;
+import com.limber.breach.solver.Solver;
 
 import org.junit.Test;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 

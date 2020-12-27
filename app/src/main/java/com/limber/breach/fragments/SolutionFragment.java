@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.fragments;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -17,6 +17,13 @@ import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.limber.breach.Analyzer;
+import com.limber.breach.DrawUtils;
+import com.limber.breach.R;
+import com.limber.breach.solver.Coordinate;
+import com.limber.breach.solver.Path;
+import com.limber.breach.solver.PathScore;
+import com.limber.breach.solver.Solver;
 
 import java.util.ArrayList;
 import java.util.List;

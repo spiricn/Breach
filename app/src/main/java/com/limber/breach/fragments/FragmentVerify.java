@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.fragments;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,12 +10,15 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
+
+import com.limber.breach.Analyzer;
+import com.limber.breach.DrawUtils;
+import com.limber.breach.R;
 
 import java.util.List;
 
