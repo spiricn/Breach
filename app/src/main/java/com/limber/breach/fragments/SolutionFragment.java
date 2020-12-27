@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -30,6 +31,7 @@ import com.limber.breach.solver.Solver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class SolutionFragment extends Fragment {
@@ -37,8 +39,11 @@ public class SolutionFragment extends Fragment {
         super(R.layout.fragment_solution);
     }
 
+    private static final int kMAX_BUFFER_SIZE = 8;
+    private static final int kMIN_BUFFER_SIZE = 3;
+    private static final int kSTART_BUFFER_SIZE = 4;
+
     SolutionFragmentArgs mArgs;
-    NumberPicker mNumberPicker;
     Button mSolveButton;
     Button mRetryButton;
 
@@ -59,9 +64,10 @@ public class SolutionFragment extends Fragment {
             Navigation.findNavController(requireView()).navigate(action);
         });
 
-        mNumberPicker = view.findViewById(R.id.bufferSize);
-        mNumberPicker.setMaxValue(8);
-        mNumberPicker.setMinValue(4);
+        setBufferSize(kSTART_BUFFER_SIZE);
+
+        view.findViewById(R.id.buttonDecreaseBuffer).setOnClickListener(view12 -> setBufferSize(mBufferSize - 1));
+        view.findViewById(R.id.buttonIncreaseBuffer).setOnClickListener(view12 -> setBufferSize(mBufferSize + 1));
 
         ((SurfaceView) view.findViewById(R.id.solutionSurface)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -97,7 +103,7 @@ public class SolutionFragment extends Fragment {
             List<List<Integer>> matrix = convertRows(result.matrix.nodes);
             List<List<Integer>> sequences = convertRows(result.sequences.nodes);
 
-            mSolver = new Solver(matrix, sequences, mNumberPicker.getValue(), new Solver.IListener() {
+            mSolver = new Solver(matrix, sequences, mBufferSize, new Solver.IListener() {
                 @Override
                 public void onAborted() {
                     Log.e("@#", "aborted");
@@ -117,6 +123,21 @@ public class SolutionFragment extends Fragment {
 
     SurfaceHolder mHolder;
     Solver mSolver;
+    int mBufferSize = 4;
+
+    void setBufferSize(int bufferSize) {
+        mBufferSize = bufferSize;
+        if (mBufferSize > kMAX_BUFFER_SIZE) {
+            mBufferSize = kMAX_BUFFER_SIZE;
+        }
+        if (mBufferSize < kMIN_BUFFER_SIZE) {
+            mBufferSize = kMIN_BUFFER_SIZE;
+        }
+
+        ((TextView) requireView().findViewById(R.id.bufferSize)).setText(
+                String.format(Locale.ENGLISH, "%d", mBufferSize)
+        );
+    }
 
     void draw() {
         Objects.requireNonNull(mHolder);

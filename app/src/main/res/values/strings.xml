@@ -6,4 +6,6 @@
     <string name="confirm">[ CONFIRM ]</string>
     <string name="scan">[ SCAN ]</string>
     <string name="bufferSize">[ buffer size ]</string>
+    <string name="plus"> + </string>
+    <string name="minus"> - </string>
 </resources>
