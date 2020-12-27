@@ -7,12 +7,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextPaint;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
-import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -44,22 +42,31 @@ public class SolutionFragment extends Fragment {
     private static final int kMIN_BUFFER_SIZE = 3;
     private static final int kSTART_BUFFER_SIZE = 4;
 
+    private static final long kMIN_SOLVE_DURATION_MS = 1500;
+
     SolutionFragmentArgs mArgs;
     Button mSolveButton;
     Button mRetryButton;
+    long mSolveStartTimestamp;
+    Handler mDelayHandler;
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        mDelayHandler = new Handler(Looper.getMainLooper());
 
         mArgs = SolutionFragmentArgs.fromBundle(requireArguments());
 
         mRetryButton = view.findViewById(R.id.btnRetry);
 
         mRetryButton.setOnClickListener(view1 -> {
+            mDelayHandler.removeCallbacksAndMessages(null);
+
+            boolean abort = mSolver != null;
+
+            stop();
             SoundPlayer.get().play(SoundPlayer.Effect.cancel);
 
-            if (mSolver != null) {
-                stop();
+            if (abort) {
                 return;
             }
 
@@ -90,6 +97,8 @@ public class SolutionFragment extends Fragment {
         mSolveButton = view.findViewById(R.id.btnSolve);
 
         view.findViewById(R.id.btnSolve).setOnClickListener(v -> {
+            mSolveStartTimestamp = System.currentTimeMillis();
+
             stop();
 
             mSolveButton.setEnabled(false);
@@ -115,8 +124,18 @@ public class SolutionFragment extends Fragment {
 
                 @Override
                 public void onSolved(PathScore result) {
-                    stop();
-                    showResult(result);
+                    long solveDuration = System.currentTimeMillis() - mSolveStartTimestamp;
+
+                    Runnable resultRunnable = () -> {
+                        stop();
+                        showResult(result);
+                    };
+
+                    if (solveDuration >= kMIN_SOLVE_DURATION_MS) {
+                        resultRunnable.run();
+                    } else {
+                        mDelayHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
+                    }
                 }
             }, new Handler(Looper.getMainLooper()));
 
