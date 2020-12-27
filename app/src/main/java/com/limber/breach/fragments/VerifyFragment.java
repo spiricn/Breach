@@ -18,6 +18,7 @@ import androidx.navigation.Navigation;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
+import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.Grid;
 import com.limber.breach.analyzer.GridNode;
 import com.limber.breach.analyzer.Result;
@@ -44,6 +45,7 @@ public class VerifyFragment extends Fragment {
 
         view.findViewById(R.id.verify_confirm).setOnClickListener(view1 -> {
             SoundPlayer.get().play(SoundPlayer.Effect.beep);
+            Vibrator.get().play(Vibrator.Effect.ok);
 
             if (!mArgs.getVerifyMatrix()) {
                 NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());

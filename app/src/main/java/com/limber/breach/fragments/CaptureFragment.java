@@ -21,6 +21,7 @@ import androidx.navigation.Navigation;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
@@ -50,6 +51,7 @@ public class CaptureFragment extends Fragment {
             mSnackbar.dismiss();
         }
 
+        Vibrator.get().play(Vibrator.Effect.ok);
         mImageCapture.takePicture(
                 ContextCompat.getMainExecutor(requireActivity()),
                 new ImageCapture.OnImageCapturedCallback() {
@@ -70,10 +72,12 @@ public class CaptureFragment extends Fragment {
     void onCaptured(Bitmap bitmap) {
         Analyzer.analyze(bitmap, result -> {
             SoundPlayer.get().play(SoundPlayer.Effect.success);
+            Vibrator.get().play(Vibrator.Effect.success);
             NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToFragmentVerify(result);
             Navigation.findNavController(requireView()).navigate(action);
         }, error -> {
             SoundPlayer.get().play(SoundPlayer.Effect.error);
+            Vibrator.get().play(Vibrator.Effect.error);
 
             mSnackbar = Snackbar.make(requireView(),
                     R.string.tryAgainError, Snackbar.LENGTH_SHORT)

@@ -215,7 +215,7 @@ public class Analyzer {
                 Objects.requireNonNull(o2.get(0).element.getBoundingBox()).top));
 
         if (rows.size() < kMIN_MATRIX_SIZE) {
-            return null;
+            throw new RuntimeException("Not found");
         }
 
         for (List<Node> row : rows) {

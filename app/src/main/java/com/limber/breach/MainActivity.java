@@ -20,7 +20,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
 
     private static final String[] PERMISSIONS = {
-            android.Manifest.permission.CAMERA
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.VIBRATE
     };
 
     @Override
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         SoundPlayer.create(this);
+        Vibrator.create(this);
 
         // Make application fullscreen
         getWindow().setFlags(

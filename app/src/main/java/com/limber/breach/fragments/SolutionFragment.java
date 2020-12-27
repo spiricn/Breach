@@ -22,6 +22,7 @@ import androidx.navigation.Navigation;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
+import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.GridNode;
 import com.limber.breach.analyzer.Result;
 import com.limber.breach.solver.Coordinate;
@@ -71,6 +72,7 @@ public class SolutionFragment extends Fragment {
             stop();
 
             SoundPlayer.get().play(SoundPlayer.Effect.cancel);
+            Vibrator.get().play(Vibrator.Effect.ok);
 
             if (abort) {
                 return;
@@ -107,6 +109,8 @@ public class SolutionFragment extends Fragment {
 
             stop();
 
+            Vibrator.get().play(Vibrator.Effect.ok);
+
             mSolveButton.setEnabled(false);
             ProgressBar progressBar = requireView().findViewById(R.id.progressBar);
             mRetryButton.setText(R.string.btnCancel);
@@ -136,6 +140,7 @@ public class SolutionFragment extends Fragment {
                     Runnable resultRunnable = () -> {
                         stop();
                         showResult(result);
+                        Vibrator.get().play(Vibrator.Effect.success);
                     };
 
                     if (solveDuration >= kMIN_SOLVE_DURATION_MS) {
@@ -156,6 +161,7 @@ public class SolutionFragment extends Fragment {
 
     void changeBufferSize(int delta) {
         SoundPlayer.get().play(SoundPlayer.Effect.short_beep);
+        Vibrator.get().play(Vibrator.Effect.short_beep);
         setBufferSize(mBufferSize + delta);
     }
 
