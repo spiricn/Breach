@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Breach</string>
     <string name="btnRetry">[ RETRY ]</string>
+    <string name="btnNewScan">[ NEW SCAN ]</string>
     <string name="btnCancel"> [ CANCEL ]</string>
     <string name="btnSolve">[ SOLVE ]</string>
     <string name="btnConfirm">[ CONFIRM ]</string>

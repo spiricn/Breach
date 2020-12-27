@@ -225,7 +225,7 @@ public class SolutionFragment extends Fragment {
 
         requireView().findViewById(R.id.progressBar).setVisibility(View.GONE);
         setInputEnabled(true);
-        mRetryButton.setText(R.string.btnRetry);
+        mRetryButton.setText(R.string.btnNewScan);
 
         if (mCurrentAnimation != null) {
             mCurrentAnimation.stop();
