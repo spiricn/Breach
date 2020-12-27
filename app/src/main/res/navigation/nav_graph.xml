@@ -25,7 +25,7 @@
             android:defaultValue="true" />
         <argument
             android:name="analyzeResult"
-            app:argType="com.limber.breach.Analyzer$Result" />
+            app:argType="com.limber.breach.analyzer.Result" />
         <action
             android:id="@+id/action_fragmentVerify_to_captureFragment"
             app:destination="@id/captureFragment" />
@@ -42,7 +42,7 @@
         android:label="SolutionFragment" >
         <argument
             android:name="result"
-            app:argType="com.limber.breach.Analyzer$Result" />
+            app:argType="com.limber.breach.analyzer.Result" />
         <action
             android:id="@+id/action_solutionFragment_to_captureFragment"
             app:destination="@id/captureFragment" />

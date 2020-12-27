@@ -5,16 +5,17 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.text.TextPaint;
-import android.widget.TextView;
+
+import com.limber.breach.analyzer.Analyzer;
+import com.limber.breach.analyzer.Grid;
+import com.limber.breach.analyzer.GridNode;
 
 import java.util.List;
 
 public class DrawUtils {
-    public static Rect getRect(Analyzer.Grid grid) {
+    public static Rect getRect(Grid grid) {
 
-        Analyzer.GridNode node = grid.nodes.get(0).get(0);
+        GridNode node = grid.nodes.get(0).get(0);
 
         int horizontal = node.boundingBox.width() * 4;
         int vertical = node.boundingBox.height() * 4;
@@ -39,7 +40,7 @@ public class DrawUtils {
         canvas.translate(-rect.left, -rect.top);
     }
 
-    public static void drawGrid(Analyzer.Grid grid, Bitmap bitmap, Canvas canvas) {
+    public static void drawGrid(Grid grid, Bitmap bitmap, Canvas canvas) {
 
         Paint boundaryPaint = new Paint();
         boundaryPaint.setColor(Color.GREEN);
@@ -56,8 +57,8 @@ public class DrawUtils {
 
         scaleFor(canvas, rect);
 
-        for (List<Analyzer.GridNode> nodeRow : grid.nodes) {
-            for (Analyzer.GridNode node : nodeRow) {
+        for (List<GridNode> nodeRow : grid.nodes) {
+            for (GridNode node : nodeRow) {
                 canvas.drawRect(node.boundingBox, boundaryPaint);
             }
         }

@@ -19,10 +19,12 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.limber.breach.Analyzer;
+import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
+import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Result;
 import com.limber.breach.solver.Coordinate;
 import com.limber.breach.solver.Path;
 import com.limber.breach.solver.PathScore;
@@ -111,7 +113,8 @@ public class SolutionFragment extends Fragment {
 
             draw();
 
-            Analyzer.Result result = mArgs.getResult();
+
+            Result result = mArgs.getResult();
 
             List<List<Integer>> matrix = convertRows(result.matrix.nodes);
             List<List<Integer>> sequences = convertRows(result.sequences.nodes);
@@ -190,7 +193,7 @@ public class SolutionFragment extends Fragment {
 
         Canvas canvas = holder.lockCanvas();
 
-        Analyzer.Result result = mArgs.getResult();
+        Result result = mArgs.getResult();
 
         DrawUtils.drawGrid(result.matrix, result.bitmap, canvas);
 
@@ -214,7 +217,7 @@ public class SolutionFragment extends Fragment {
         int stepCounter = 0;
         for (Coordinate coord : path.coordinates()) {
 
-            Analyzer.GridNode resNode = mArgs.getResult().matrix.nodes.get(coord.row).get(coord.column);
+            GridNode resNode = mArgs.getResult().matrix.nodes.get(coord.row).get(coord.column);
 
             canvas.drawText("" + stepCounter, resNode.boundingBox.left, resNode.boundingBox.top, textPaint);
 
@@ -225,12 +228,12 @@ public class SolutionFragment extends Fragment {
     }
 
 
-    static List<List<Integer>> convertRows(List<List<Analyzer.GridNode>> inRows) {
+    static List<List<Integer>> convertRows(List<List<GridNode>> inRows) {
         List<List<Integer>> rows = new ArrayList<>();
 
-        for (List<Analyzer.GridNode> row : inRows) {
+        for (List<GridNode> row : inRows) {
             List<Integer> irow = new ArrayList<>();
-            for (Analyzer.GridNode node : row) {
+            for (GridNode node : row) {
                 irow.add(Integer.parseInt(node.text, 16));
             }
 

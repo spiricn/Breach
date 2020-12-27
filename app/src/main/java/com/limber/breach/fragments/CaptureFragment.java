@@ -22,7 +22,7 @@ import androidx.navigation.Navigation;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.limber.breach.Analyzer;
+import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
 

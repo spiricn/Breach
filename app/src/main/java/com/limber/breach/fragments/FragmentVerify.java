@@ -9,17 +9,19 @@ import android.text.TextPaint;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.limber.breach.Analyzer;
+import com.limber.breach.analyzer.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
+import com.limber.breach.analyzer.Grid;
+import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Result;
 
 import java.util.List;
 
@@ -93,9 +95,10 @@ public class FragmentVerify extends Fragment {
         boundaryPaint.setStyle(Paint.Style.STROKE);
         boundaryPaint.setStrokeWidth(2);
 
-        Analyzer.Result result = mArgs.getAnalyzeResult();
+        Result result = mArgs.getAnalyzeResult();
 
-        Analyzer.Grid grid = mArgs.getVerifyMatrix() ? result.matrix : result.sequences;
+
+        Grid grid = mArgs.getVerifyMatrix() ? result.matrix : result.sequences;
 
         DrawUtils.drawGrid(grid, result.bitmap, canvas);
 
@@ -104,28 +107,12 @@ public class FragmentVerify extends Fragment {
         textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
         textPaint.setColor(Color.argb(200, 255, 0, 0));
 
-        for (List<Analyzer.GridNode> nodeRow : grid.nodes) {
-            for (Analyzer.GridNode node : nodeRow) {
+        for (List<GridNode> nodeRow : grid.nodes) {
+            for (GridNode node : nodeRow) {
                 canvas.drawText(node.text, node.boundingBox.left, node.boundingBox.top, textPaint);
             }
         }
 
         mSurfaceHolder.unlockCanvasAndPost(canvas);
-
-        StringBuilder b = new StringBuilder();
-
-        b.append("Confirm " + (mArgs.getVerifyMatrix() ? "matrix" : "sequences") + ":\n\n");
-
-        for (List<Analyzer.GridNode> line : grid.nodes) {
-            for (Analyzer.GridNode node : line) {
-                b.append("\t" + node.text + "  ");
-            }
-
-            b.append("\n");
-        }
-
-//        ((TextView) getView().findViewById(R.id.scannedResults)).setText(b.toString());
     }
-
-
 }
