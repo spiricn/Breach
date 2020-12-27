@@ -11,10 +11,11 @@
         android:id="@+id/verify_confirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="4dp"
         android:elevation="2dp"
         android:scaleType="fitCenter"
-        android:text="@string/confirm"
+        android:text="@string/btnConfirm"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -22,10 +23,11 @@
         android:id="@+id/verify_retry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginBottom="4dp"
         android:elevation="2dp"
         android:scaleType="fitCenter"
-        android:text="@string/retry"
+        android:text="@string/btnRetry"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -33,9 +35,9 @@
         android:id="@+id/surfaceView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="32dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toTopOf="@+id/verify_confirm"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

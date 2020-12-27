@@ -43,8 +43,6 @@ public class CaptureFragment extends Fragment {
         mButton.setOnClickListener(view1 -> capture());
 
         initialize();
-
-//        onCaptured(BitmapFactory.decodeResource(getResources(), R.drawable.test_6x6_1_01));
     }
 
     private void capture() {
@@ -118,6 +116,8 @@ public class CaptureFragment extends Fragment {
                     this, cameraSelector, preview, mImageCapture);
 
             mButton.setEnabled(true);
+
+//            onCaptured(BitmapFactory.decodeResource(getResources(), R.drawable.test_6x6_1_01));
 
         }, ContextCompat.getMainExecutor(requireActivity()));
     }

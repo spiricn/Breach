@@ -13,7 +13,8 @@
             app:destination="@id/captureFragment" />
         <action
             android:id="@+id/action_captureFragment_to_fragmentVerify"
-            app:destination="@id/fragmentVerify" />
+            app:destination="@id/fragmentVerify"
+            app:launchSingleTop="false" />
     </fragment>
     <fragment
         android:id="@+id/fragmentVerify"
@@ -31,10 +32,12 @@
             app:destination="@id/captureFragment" />
         <action
             android:id="@+id/action_fragmentVerify_to_solutionFragment"
-            app:destination="@id/solutionFragment" />
+            app:destination="@id/solutionFragment"
+            app:popUpTo="@id/captureFragment" />
         <action
             android:id="@+id/action_fragmentVerify_self"
-            app:destination="@id/fragmentVerify" />
+            app:destination="@id/fragmentVerify"
+            app:popUpTo="@id/captureFragment" />
     </fragment>
     <fragment
         android:id="@+id/solutionFragment"

@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Breach</string>
-    <string name="retry">[ RETRY ]</string>
-    <string name="cancel"> [ CANCEL ]</string>
-    <string name="solve">[ SOLVE ]</string>
-    <string name="confirm">[ CONFIRM ]</string>
-    <string name="scan">[ SCAN ]</string>
-    <string name="bufferSize">[ buffer size ]</string>
-    <string name="plus"> + </string>
-    <string name="minus"> - </string>
+    <string name="btnRetry">[ RETRY ]</string>
+    <string name="btnCancel"> [ CANCEL ]</string>
+    <string name="btnSolve">[ SOLVE ]</string>
+    <string name="btnConfirm">[ CONFIRM ]</string>
+    <string name="btnScan">[ SCAN ]</string>
+    <string name="bufferSize">BUFFER SIZE</string>
+    <string name="plus">+</string>
+    <string name="minus">-</string>
 </resources>

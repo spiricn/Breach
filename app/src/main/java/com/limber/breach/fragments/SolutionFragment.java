@@ -53,6 +53,12 @@ public class SolutionFragment extends Fragment {
     Handler mDelayHandler;
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        stop();
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         mDelayHandler = new Handler(Looper.getMainLooper());
 
@@ -61,11 +67,10 @@ public class SolutionFragment extends Fragment {
         mRetryButton = view.findViewById(R.id.btnRetry);
 
         mRetryButton.setOnClickListener(view1 -> {
-            mDelayHandler.removeCallbacksAndMessages(null);
-
             boolean abort = mSolver != null;
 
             stop();
+
             SoundPlayer.get().play(SoundPlayer.Effect.cancel);
 
             if (abort) {
@@ -105,7 +110,7 @@ public class SolutionFragment extends Fragment {
 
             mSolveButton.setEnabled(false);
             ProgressBar progressBar = requireView().findViewById(R.id.progressBar);
-            mRetryButton.setText(R.string.cancel);
+            mRetryButton.setText(R.string.btnCancel);
 
             progressBar.setVisibility(View.VISIBLE);
 
@@ -175,16 +180,17 @@ public class SolutionFragment extends Fragment {
     }
 
     void stop() {
+        mDelayHandler.removeCallbacksAndMessages(null);
+
         if (mSolver != null) {
             mSolver.stop();
             mSolver = null;
+            SoundPlayer.get().stop();
         }
-
-        SoundPlayer.get().stop();
 
         requireView().findViewById(R.id.progressBar).setVisibility(View.GONE);
         mSolveButton.setEnabled(true);
-        mRetryButton.setText(R.string.retry);
+        mRetryButton.setText(R.string.btnRetry);
     }
 
 
