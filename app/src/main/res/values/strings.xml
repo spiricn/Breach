@@ -3,5 +3,7 @@
     <string name="retry">[ RETRY ]</string>
     <string name="cancel"> [ CANCEL ]</string>
     <string name="solve">[ SOLVE ]</string>
+    <string name="confirm">[ CONFIRM ]</string>
+    <string name="scan">[ SCAN ]</string>
     <string name="bufferSize">[ buffer size ]</string>
 </resources>
