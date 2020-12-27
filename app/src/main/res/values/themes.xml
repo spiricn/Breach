@@ -7,12 +7,20 @@
         <item name="colorOnPrimary">@color/black</item>
 
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondary">@color/cyberpunk_yellow</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
 
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Menu color -->
+        <item name="android:actionMenuTextColor">@color/cyberpunk_yellow</item>
+        <item name="actionMenuTextColor">@color/cyberpunk_yellow</item>
+        <item name="android:itemTextAppearance">@style/myCustomMenuTextAppearance</item>
+
+        <item name="android:actionBarStyle">@style/ThemeActionBar</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <!-- Support library compatibility -->
+        <item name="actionBarStyle">@style/ThemeActionBar</item>
+        <item name="windowActionBarOverlay">true</item>
 
         <!-- Customize your theme here. -->
         <item name="android:fontFamily">@font/audimat</item>

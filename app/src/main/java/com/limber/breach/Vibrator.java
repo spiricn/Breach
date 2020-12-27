@@ -37,6 +37,17 @@ public class Vibrator {
     }
 
     public void play(Effect effect) {
+
+        if(!mEnabled) {
+            return;
+        }
+
         mService.vibrate(effect.getPattern(), -1);
     }
+
+    public void setEnabled(boolean enabled) {
+        mEnabled = enabled;
+    }
+
+    boolean mEnabled = true;
 }

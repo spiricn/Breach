@@ -1,10 +1,14 @@
 package com.limber.breach;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -19,17 +23,54 @@ import com.google.android.material.snackbar.Snackbar;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
 
+    private static final String kPREFS_NAME = "BreachPrefs";
+    private static final String kPREFS_KEY_VIBRATION_ENABLED = "VibrationEnabled";
+    private static final String kPREFS_KEY_SOUND_ENABLED = "SoundEnabled";
+
     private static final String[] PERMISSIONS = {
             android.Manifest.permission.CAMERA,
             android.Manifest.permission.VIBRATE
     };
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menuToggleSound) {
+            mPrefs.edit().putBoolean(kPREFS_KEY_SOUND_ENABLED, !mPrefs.getBoolean(kPREFS_KEY_SOUND_ENABLED, true)).apply();
+            updatePrefs();
+            return true;
+        } else if (item.getItemId() == R.id.menuToggleVibration) {
+            mPrefs.edit().putBoolean(kPREFS_KEY_VIBRATION_ENABLED, !mPrefs.getBoolean(kPREFS_KEY_VIBRATION_ENABLED, true)).apply();
+            updatePrefs();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    void updatePrefs() {
+        SoundPlayer.get().setEnabled(mPrefs.getBoolean(kPREFS_KEY_SOUND_ENABLED, true));
+        Vibrator.get().setEnabled(mPrefs.getBoolean(kPREFS_KEY_VIBRATION_ENABLED, true));
+    }
+
+    SharedPreferences mPrefs;
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mPrefs = getSharedPreferences(kPREFS_NAME, Context.MODE_PRIVATE);
+
         SoundPlayer.create(this);
         Vibrator.create(this);
+
+        updatePrefs();
 
         // Make application fullscreen
         getWindow().setFlags(
@@ -39,10 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Hide the status bar
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
 
         if (allPermissionsGranted()) {
             start();

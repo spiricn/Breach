@@ -59,6 +59,10 @@ public class SoundPlayer {
     }
 
     public void play(Effect effect, boolean loop) {
+        if(!mEnabled) {
+            return;
+        }
+
         mHandler.post(() -> {
             try {
                 playPriv(effect, loop);
@@ -67,6 +71,12 @@ public class SoundPlayer {
             }
         });
     }
+
+    public void setEnabled(boolean enabled) {
+        mEnabled = enabled;
+    }
+
+    boolean mEnabled = true;
 
     private void playPriv(Effect effect, boolean loop) throws IOException {
         mMediaPlayer.stop();

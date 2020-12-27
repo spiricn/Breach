@@ -10,4 +10,6 @@
     <string name="tryAgainError">[ TRY AGAIN ]</string>
     <string name="plus">+</string>
     <string name="minus">-</string>
+    <string name="menuToggleVibration">Toggle vibration on/off/</string>
+    <string name="menuToggleSound">Toggle sound on/off</string>
 </resources>

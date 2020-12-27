@@ -1,8 +1,13 @@
 <resources>
-    <style name="DebugOverlayStyle" parent="android:Theme.NoTitleBar.Fullscreen">
-        <item name="android:textViewStyle">@style/TextAppearance.AppCompat.Medium</item>
-        <item name="android:textColor">#ffffffff</item>
-        <item name="android:typeface">monospace</item>
+
+    <style name="ThemeActionBar" parent="Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="android:background">@null</item>
+        <!-- Support library compatibility -->
+        <item name="background">@null</item>
+    </style>
+
+    <style name="myCustomMenuTextAppearance" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
+        <item name="android:textColor">@color/cyberpunk_yellow</item>
     </style>
 
 </resources>
