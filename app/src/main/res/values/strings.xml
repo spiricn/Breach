@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Breach</string>
+    <string name="retry">[ RETRY ]</string>
+    <string name="cancel"> [ CANCEL ]</string>
+    <string name="solve">[ SOLVE ]</string>
+    <string name="bufferSize">[ buffer size ]</string>
 </resources>

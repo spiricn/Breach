@@ -39,9 +39,7 @@ public class CaptureFragment extends Fragment {
         mButton = view.findViewById(R.id.camera_capture_button);
         mButton.setEnabled(false);
 
-        mButton.setOnClickListener((View.OnClickListener) view1 -> {
-            capture();
-        });
+        mButton.setOnClickListener(view1 -> capture());
 
         initialize();
 
@@ -55,7 +53,7 @@ public class CaptureFragment extends Fragment {
         }
 
         mImageCapture.takePicture(
-                ContextCompat.getMainExecutor(getActivity()),
+                ContextCompat.getMainExecutor(requireActivity()),
                 new ImageCapture.OnImageCapturedCallback() {
                     @Override
                     public void onCaptureSuccess(@NonNull ImageProxy image) {
@@ -75,9 +73,9 @@ public class CaptureFragment extends Fragment {
         Analyzer.analyze(bitmap, result -> {
             NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToFragmentVerify(result);
 
-            Navigation.findNavController(getView()).navigate(action);
+            Navigation.findNavController(requireView()).navigate(action);
         }, error -> {
-            mSnackbar = Snackbar.make(getView(),
+            mSnackbar = Snackbar.make(requireView(),
                     "[ TRY AGAIN ]", Snackbar.LENGTH_SHORT)
                     .setBackgroundTint(Color.argb(125, 255, 60, 60))
                     .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE);
@@ -91,17 +89,13 @@ public class CaptureFragment extends Fragment {
 
 
     void initialize() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(getActivity());
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireActivity());
 
         cameraProviderFuture.addListener(() -> {
-            ProcessCameraProvider cameraProvider = null;
+            ProcessCameraProvider cameraProvider;
             try {
                 cameraProvider = cameraProviderFuture.get();
-            } catch (ExecutionException e) {
-                // TODO
-                e.printStackTrace();
-                return;
-            } catch (InterruptedException e) {
+            } catch (ExecutionException | InterruptedException e) {
                 // TODO
                 e.printStackTrace();
                 return;
@@ -109,7 +103,7 @@ public class CaptureFragment extends Fragment {
 
             Preview preview = new Preview.Builder().build();
 
-            PreviewView viewFinder = getView().findViewById(R.id.viewFinder);
+            PreviewView viewFinder = requireView().findViewById(R.id.viewFinder);
             preview.setSurfaceProvider(viewFinder.createSurfaceProvider());
 
             CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
@@ -122,7 +116,7 @@ public class CaptureFragment extends Fragment {
 
             mButton.setEnabled(true);
 
-        }, ContextCompat.getMainExecutor(getActivity()));
+        }, ContextCompat.getMainExecutor(requireActivity()));
     }
 
     private ImageCapture mImageCapture;

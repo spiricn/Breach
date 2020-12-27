@@ -7,17 +7,19 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextPaint;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.Button;
 import android.widget.NumberPicker;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.limber.breach.Analyzer;
 import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
@@ -37,13 +39,22 @@ public class SolutionFragment extends Fragment {
 
     SolutionFragmentArgs mArgs;
     NumberPicker mNumberPicker;
+    Button mSolveButton;
+    Button mRetryButton;
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
 
         mArgs = SolutionFragmentArgs.fromBundle(requireArguments());
 
-        view.findViewById(R.id.btnRetry).setOnClickListener(view1 -> {
+        mRetryButton = view.findViewById(R.id.btnRetry);
+
+        mRetryButton.setOnClickListener(view1 -> {
+            if (mSolver != null) {
+                stop();
+                return;
+            }
+
             NavDirections action = SolutionFragmentDirections.actionSolutionFragmentToCaptureFragment();
             Navigation.findNavController(requireView()).navigate(action);
         });
@@ -67,10 +78,17 @@ public class SolutionFragment extends Fragment {
             }
         });
 
+        mSolveButton = view.findViewById(R.id.btnSolve);
+
         view.findViewById(R.id.btnSolve).setOnClickListener(v -> {
-            if (mSolver != null) {
-                mSolver.stop();
-            }
+            Log.e("@#", "solve clicked");
+            stop();
+
+            mSolveButton.setEnabled(false);
+            ProgressBar progressBar = requireView().findViewById(R.id.progressBar);
+            mRetryButton.setText(R.string.cancel);
+
+            progressBar.setVisibility(View.VISIBLE);
 
             draw();
 
@@ -79,18 +97,16 @@ public class SolutionFragment extends Fragment {
             List<List<Integer>> matrix = convertRows(result.matrix.nodes);
             List<List<Integer>> sequences = convertRows(result.sequences.nodes);
 
-            Snackbar.make(requireView(),
-                    "[ BREACHING .. ]", Snackbar.LENGTH_LONG)
-                    .show();
-
             mSolver = new Solver(matrix, sequences, mNumberPicker.getValue(), new Solver.IListener() {
                 @Override
                 public void onAborted() {
+                    Log.e("@#", "aborted");
                 }
 
                 @Override
                 public void onSolved(PathScore result) {
-
+                    Log.e("@#", "solved");
+                    stop();
                     showResult(result);
                 }
             }, new Handler(Looper.getMainLooper()));
@@ -105,6 +121,17 @@ public class SolutionFragment extends Fragment {
     void draw() {
         Objects.requireNonNull(mHolder);
         draw(mHolder);
+    }
+
+    void stop() {
+        if (mSolver != null) {
+            mSolver.stop();
+            mSolver = null;
+        }
+
+        requireView().findViewById(R.id.progressBar).setVisibility(View.GONE);
+        mSolveButton.setEnabled(true);
+        mRetryButton.setText(R.string.retry);
     }
 
 

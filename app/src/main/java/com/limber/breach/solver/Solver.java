@@ -63,6 +63,8 @@ public class Solver {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        mCallbackHandler.removeCallbacks(null);
     }
 
     private PathScore solve() throws InterruptedException {
