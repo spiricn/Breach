@@ -77,8 +77,8 @@ public class CaptureFragment extends Fragment {
             SoundPlayer.get().play(SoundPlayer.Effect.error);
 
             mSnackbar = Snackbar.make(requireView(),
-                    "[ TRY AGAIN ]", Snackbar.LENGTH_SHORT)
-                    .setBackgroundTint(Color.argb(125, 255, 60, 60))
+                    R.string.tryAgainError, Snackbar.LENGTH_SHORT)
+                    .setBackgroundTint(getResources().getColor(R.color.cyberpunk_red))
                     .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE);
             mSnackbar.show();
 
@@ -116,8 +116,6 @@ public class CaptureFragment extends Fragment {
                     this, cameraSelector, preview, mImageCapture);
 
             mButton.setEnabled(true);
-
-//            onCaptured(BitmapFactory.decodeResource(getResources(), R.drawable.test_6x6_1_01));
 
         }, ContextCompat.getMainExecutor(requireActivity()));
     }

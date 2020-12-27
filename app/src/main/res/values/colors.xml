@@ -7,5 +7,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="cyberpunk_yellow">#cfed57</color>
+    <color name="cyberpunk_red">#80FF5722</color>
 
 </resources>

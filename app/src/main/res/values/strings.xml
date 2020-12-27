@@ -6,6 +6,7 @@
     <string name="btnConfirm">[ CONFIRM ]</string>
     <string name="btnScan">[ SCAN ]</string>
     <string name="bufferSize">BUFFER SIZE</string>
+    <string name="tryAgainError">[ TRY AGAIN ]</string>
     <string name="plus">+</string>
     <string name="minus">-</string>
 </resources>
