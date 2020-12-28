@@ -41,13 +41,36 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menuToggleSound) {
-            mPrefs.edit().putBoolean(kPREFS_KEY_SOUND_ENABLED, !mPrefs.getBoolean(kPREFS_KEY_SOUND_ENABLED, true)).apply();
+        if (item.getItemId() == R.id.menuToggleSound || item.getItemId() == R.id.menuToggleVibration) {
+            // Toggle vibration/sound on or off
+            String settingsKey;
+            int notificationStringId;
+
+            if (item.getItemId() == R.id.menuToggleSound) {
+                settingsKey = kPREFS_KEY_SOUND_ENABLED;
+                notificationStringId = R.string.soundToggleSnack;
+            } else {
+                settingsKey = kPREFS_KEY_VIBRATION_ENABLED;
+                notificationStringId = R.string.vibrationToggleSnack;
+            }
+
+            boolean state = !mPrefs.getBoolean(settingsKey, true);
+            mPrefs.edit().putBoolean(settingsKey, state).apply();
             updatePrefs();
-            return true;
-        } else if (item.getItemId() == R.id.menuToggleVibration) {
-            mPrefs.edit().putBoolean(kPREFS_KEY_VIBRATION_ENABLED, !mPrefs.getBoolean(kPREFS_KEY_VIBRATION_ENABLED, true)).apply();
-            updatePrefs();
+
+            String stateString = getResources().getString(state ? R.string.settingOn : R.string.settingOff);
+
+            Snackbar.make(getWindow().getDecorView().getRootView(),
+                    String.format(getResources().getString(notificationStringId), stateString),
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+
+            if (item.getItemId() == R.id.menuToggleSound) {
+                SoundPlayer.get().play(SoundPlayer.Effect.success);
+            } else {
+                Vibrator.get().play(Vibrator.Effect.success);
+            }
+
             return true;
         }
 
@@ -102,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (!allPermissionsGranted()) {
                 Snackbar.make(getWindow().getDecorView().getRootView(),
-                        "Permissions not granted by user..", Snackbar.LENGTH_LONG)
+                        R.string.permissionsNotGrantedSnack, Snackbar.LENGTH_LONG)
                         .show();
                 finish();
             } else {

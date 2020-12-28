@@ -10,6 +10,12 @@
     <string name="tryAgainError">[ TRY AGAIN ]</string>
     <string name="plus">+</string>
     <string name="minus">-</string>
-    <string name="menuToggleVibration">Toggle vibration on/off/</string>
-    <string name="menuToggleSound">Toggle sound on/off</string>
+    <string name="menuToggleVibration">Toggle vibration</string>
+    <string name="menuToggleSound">Toggle sound effects</string>
+    <string name="permissionsNotGrantedSnack">Permissions not granted by user..</string>
+    <string name="soundToggleSnack">Sound effects turned %s</string>
+    <string name="vibrationToggleSnack">Vibration turned %s</string>
+    <string name="settingOn">on</string>
+    <string name="settingOff">off</string>
+
 </resources>
