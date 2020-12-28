@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
             NavGraphDirections.ActionGlobalCaptureFragment action = CaptureFragmentDirections.actionGlobalCaptureFragment()
                     .setBitmap(BitmapFactory.decodeResource(getResources(),
                             R.drawable.test_5x5_3_01));
+
             Navigation.findNavController(this, R.id.fragment).navigate(action);
             return true;
         }

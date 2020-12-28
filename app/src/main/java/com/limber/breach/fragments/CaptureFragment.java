@@ -3,12 +3,14 @@ package com.limber.breach.fragments;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -50,6 +52,13 @@ public class CaptureFragment extends Fragment {
         initialize();
     }
 
+    @Override
+    public void onDestroyView() {
+        getArguments().clear();
+
+        super.onDestroyView();
+    }
+
     private void capture() {
         mButton.setEnabled(false);
         if (mSnackbar != null) {
@@ -66,9 +75,20 @@ public class CaptureFragment extends Fragment {
                         byte[] bytes = new byte[planeProxy.getBuffer().remaining()];
                         planeProxy.getBuffer().get(bytes);
 
+                        image.close();
                         super.onCaptureSuccess(image);
 
                         onCaptured(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                    }
+
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exception) {
+                        exception.printStackTrace();
+                        super.onError(exception);
+
+                        Snackbar.make(requireView(),
+                                R.string.errorTakePicture, Snackbar.LENGTH_LONG)
+                                .show();
                     }
                 }
         );

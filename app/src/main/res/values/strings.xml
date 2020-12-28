@@ -16,5 +16,6 @@
     <string name="permissionsNotGrantedSnack">Permissions not granted by user..</string>
     <string name="settingOn">on</string>
     <string name="settingOff">off</string>
+    <string name="errorTakePicture">Failed to capture picture</string>
 
 </resources>
