@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
@@ -17,8 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.Navigation;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.limber.breach.fragments.CaptureFragmentDirections;
+import com.limber.breach.fragments.VerifyFragmentDirections;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
@@ -75,6 +79,12 @@ public class MainActivity extends AppCompatActivity {
                 Vibrator.get().play(Vibrator.Effect.success);
             }
 
+            return true;
+        } else if (item.getItemId() == R.id.menuLoadExample) {
+            NavGraphDirections.ActionGlobalCaptureFragment action = CaptureFragmentDirections.actionGlobalCaptureFragment()
+                    .setBitmap(BitmapFactory.decodeResource(getResources(),
+                            R.drawable.test_5x5_3_01));
+            Navigation.findNavController(this, R.id.fragment).navigate(action);
             return true;
         }
 

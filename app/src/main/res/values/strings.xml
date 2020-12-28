@@ -12,6 +12,7 @@
     <string name="minus">-</string>
     <string name="menuToggleVibration">Toggle vibration</string>
     <string name="menuToggleSound">Toggle sound effects</string>
+    <string name="menuLoadExample">Load example scan</string>
     <string name="permissionsNotGrantedSnack">Permissions not granted by user..</string>
     <string name="settingOn">on</string>
     <string name="settingOff">off</string>

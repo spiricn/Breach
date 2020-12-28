@@ -15,6 +15,11 @@
             android:id="@+id/action_captureFragment_to_fragmentVerify"
             app:destination="@id/fragmentVerify"
             app:launchSingleTop="false" />
+        <argument
+            android:name="bitmap"
+            app:argType="android.graphics.Bitmap"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
     <fragment
         android:id="@+id/fragmentVerify"
@@ -50,4 +55,5 @@
             android:id="@+id/action_solutionFragment_to_captureFragment"
             app:destination="@id/captureFragment" />
     </fragment>
+    <action android:id="@+id/action_global_captureFragment" app:destination="@id/captureFragment" />
 </navigation>

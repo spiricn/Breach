@@ -12,4 +12,7 @@
             android:checkable="true"
             android:title="@string/menuToggleVibration" />
     </group>
+    <item
+        android:id="@+id/menuLoadExample"
+        android:title="@string/menuLoadExample" />
 </menu>

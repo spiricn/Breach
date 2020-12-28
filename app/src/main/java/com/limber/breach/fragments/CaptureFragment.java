@@ -40,8 +40,13 @@ public class CaptureFragment extends Fragment {
         mButton = view.findViewById(R.id.camera_capture_button);
         mButton.setEnabled(false);
 
-        mButton.setOnClickListener(view1 -> capture());
+        CaptureFragmentArgs args = CaptureFragmentArgs.fromBundle(getArguments());
+        if (args.getBitmap() != null) {
+            view.post(() -> onCaptured(args.getBitmap()));
+            return;
+        }
 
+        mButton.setOnClickListener(view1 -> capture());
         initialize();
     }
 
