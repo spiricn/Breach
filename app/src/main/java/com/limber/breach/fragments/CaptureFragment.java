@@ -108,7 +108,7 @@ public class CaptureFragment extends Fragment {
             Preview preview = new Preview.Builder().build();
 
             PreviewView viewFinder = requireView().findViewById(R.id.viewFinder);
-            preview.setSurfaceProvider(viewFinder.createSurfaceProvider());
+            preview.setSurfaceProvider(viewFinder.getSurfaceProvider());
 
             CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 

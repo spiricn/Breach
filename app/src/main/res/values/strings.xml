@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Breach</string>
+    <string name="app_name">Breach Protocol</string>
     <string name="btnRetry">[ RETRY ]</string>
     <string name="btnNewScan">[ NEW SCAN ]</string>
     <string name="btnCancel"> [ CANCEL ]</string>
