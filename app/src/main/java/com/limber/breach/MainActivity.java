@@ -36,7 +36,21 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
+
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            if (item.getItemId() == R.id.menuToggleSound) {
+                item.setChecked(mPrefs.getBoolean(kPREFS_KEY_SOUND_ENABLED, true));
+            } else if (item.getItemId() == R.id.menuToggleVibration) {
+                item.setChecked(mPrefs.getBoolean(kPREFS_KEY_VIBRATION_ENABLED, true));
+            }
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -44,26 +58,16 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.menuToggleSound || item.getItemId() == R.id.menuToggleVibration) {
             // Toggle vibration/sound on or off
             String settingsKey;
-            int notificationStringId;
 
             if (item.getItemId() == R.id.menuToggleSound) {
                 settingsKey = kPREFS_KEY_SOUND_ENABLED;
-                notificationStringId = R.string.soundToggleSnack;
             } else {
                 settingsKey = kPREFS_KEY_VIBRATION_ENABLED;
-                notificationStringId = R.string.vibrationToggleSnack;
             }
 
             boolean state = !mPrefs.getBoolean(settingsKey, true);
             mPrefs.edit().putBoolean(settingsKey, state).apply();
             updatePrefs();
-
-            String stateString = getResources().getString(state ? R.string.settingOn : R.string.settingOff);
-
-            Snackbar.make(getWindow().getDecorView().getRootView(),
-                    String.format(getResources().getString(notificationStringId), stateString),
-                    Snackbar.LENGTH_SHORT)
-                    .show();
 
             if (item.getItemId() == R.id.menuToggleSound) {
                 SoundPlayer.get().play(SoundPlayer.Effect.success);
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         }
+
 
         return super.onOptionsItemSelected(item);
     }
