@@ -185,14 +185,26 @@ public class SolutionFragment extends Fragment {
 
     void setInputEnabled(boolean enabled) {
         mSolveButton.setEnabled(enabled);
-        mIncraseBufferButton.setEnabled(enabled);
-        mDecreaseBufferButton.setEnabled(enabled);
+
+        if (enabled) {
+            refreshBufferButtons();
+        } else {
+            mIncraseBufferButton.setEnabled(enabled);
+            mDecreaseBufferButton.setEnabled(enabled);
+        }
     }
 
     void changeBufferSize(int delta) {
         SoundPlayer.get().play(SoundPlayer.Effect.short_beep);
         Vibrator.get().play(Vibrator.Effect.short_beep);
         setBufferSize(mBufferSize + delta);
+
+        refreshBufferButtons();
+    }
+
+    void refreshBufferButtons() {
+        mIncraseBufferButton.setEnabled(mBufferSize < kMAX_BUFFER_SIZE);
+        mDecreaseBufferButton.setEnabled(mBufferSize > kMIN_BUFFER_SIZE);
     }
 
     void setBufferSize(int bufferSize) {
