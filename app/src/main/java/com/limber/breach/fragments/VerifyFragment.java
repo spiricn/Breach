@@ -172,6 +172,7 @@ public class VerifyFragment extends Fragment {
         kTEXT_PAINT.setTextSize(60);
         kTEXT_PAINT.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
         kTEXT_PAINT.setColor(Color.argb(200, 255, 0, 0));
+        kTEXT_PAINT.setAntiAlias(true);
 
     }
 }

@@ -63,6 +63,12 @@ public class DrawUtils {
         highlightNodes(grid, canvas, null, kBOUNDARY_PAINT);
     }
 
+
+    public static void highlightNodes(Grid grid, Canvas canvas, List<Node> nodes) {
+        highlightNodes(grid, canvas, nodes, kBOUNDARY_PAINT);
+    }
+
+
     public static void highlightNodes(Grid grid, Canvas canvas, List<Node> nodes, Paint boundaryPaint) {
         scaleFor(canvas, getRect(grid));
 

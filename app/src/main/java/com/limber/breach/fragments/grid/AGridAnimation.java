@@ -5,9 +5,24 @@ import android.view.SurfaceHolder;
 
 import androidx.fragment.app.Fragment;
 
+/**
+ * Base grid animation class
+ */
 public abstract class AGridAnimation {
+    /**
+     * Handler used to execute commands
+     */
     private final Handler mHandler;
+
+    /**
+     * Target surface holder
+     */
     private final SurfaceHolder mHolder;
+
+    /**
+     * Indication if animation is running
+     */
+    private boolean mRunning = false;
 
     protected AGridAnimation(Fragment fragment, SurfaceHolder holder) {
         mHandler = new Handler(fragment.requireActivity().getMainLooper());
@@ -18,11 +33,29 @@ public abstract class AGridAnimation {
         return mHolder;
     }
 
+    /**
+     * Stop the animation
+     */
     public void stop() {
+        if (!mRunning) {
+            return;
+        }
+
         mHandler.removeCallbacksAndMessages(null);
+
+        mRunning = false;
     }
 
+    /**
+     * Start the animation
+     */
     public void start() {
+        if (mRunning) {
+            throw new IllegalStateException();
+        }
+
+        mRunning = true;
+
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -38,5 +71,10 @@ public abstract class AGridAnimation {
         runnable.run();
     }
 
+    /**
+     * Update animation step
+     *
+     * @return Delay between next update in milliseconds, or null if finished
+     */
     protected abstract Integer onUpdate();
 }

@@ -18,55 +18,101 @@ import com.limber.breach.solver.PathScore;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Animation which shows the solution on screen
+ */
 public class SolutionAnimation extends AGridAnimation {
 
-    Result mResult;
+    /**
+     * Sleep time between step renders
+     */
+    private static final int kSTEP_TIME_MS = 200;
 
-    PathScore mPathScore;
-    List<Coordinate> mAllCoords;
-    List<Coordinate> mCoords = new ArrayList<>();
+    /**
+     * Used to show step text
+     */
+    private static final TextPaint kTEXT_PAINT;
+
+    /**
+     * Minimum text size
+     */
+    private static final int kMIN_TEXT_SIZE = 60;
+
+    /**
+     * Maximum text size
+     */
+    private static final int kMAX_TEXT_SIZE = kMIN_TEXT_SIZE + 30;
+
+    /**
+     * Analysis result
+     */
+    private final Result mResult;
+
+    /**
+     * All solution coordinates
+     */
+    private final List<Coordinate> mAllCoords;
+
+    /**
+     * Highlighted subset of mAllCoords
+     */
+    private final List<Coordinate> mHighlightedCoords = new ArrayList<>();
 
     public SolutionAnimation(Fragment fragment, SurfaceHolder holder, Result result, PathScore pathScore) {
         super(fragment, holder);
-        mResult = result;
-        mPathScore = pathScore;
 
-        mAllCoords = new ArrayList<>(mPathScore.path().coordinates());
+        mResult = result;
+
+        mAllCoords = new ArrayList<>(pathScore.path().coordinates());
     }
 
     @Override
     protected Integer onUpdate() {
-        if (mAllCoords.size() == mCoords.size()) {
+        if (mAllCoords.size() == mHighlightedCoords.size()) {
             return null;
         }
 
+        mHighlightedCoords.add(mAllCoords.get(mHighlightedCoords.size()));
+        redraw();
+
+        SoundPlayer.get().play(SoundPlayer.Effect.beep);
+
+        return kSTEP_TIME_MS;
+    }
+
+    /**
+     * Redraw animation
+     */
+    private void redraw() {
         Canvas canvas = getHolder().lockCanvas();
 
+        // Draw background grid
         DrawUtils.drawGrid(mResult.matrix, mResult.bitmap, canvas);
         DrawUtils.scaleFor(canvas, DrawUtils.getRect(mResult.matrix));
 
-        TextPaint textPaint = new TextPaint();
+        int stepCounter = 1;
 
-        textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
-        textPaint.setColor(Color.argb(200, 255, 0, 0));
+        // Highlight all the steps so far
+        for (Coordinate coord : mHighlightedCoords) {
+            Node node = mResult.matrix.rows.get(coord.row).get(coord.column);
 
-        mCoords.add(mAllCoords.get(mCoords.size()));
+            // Scale the text size based on step number (from smallest to largest)
+            int scaledTextSize = (int) (kMIN_TEXT_SIZE + (kMAX_TEXT_SIZE - kMIN_TEXT_SIZE) * ((float) stepCounter / (float) mAllCoords.size()));
+            kTEXT_PAINT.setTextSize(scaledTextSize);
 
-        int stepCounter = 0;
-        for (Coordinate coord : mCoords) {
-
-            Node resNode = mResult.matrix.rows.get(coord.row).get(coord.column);
-
-            textPaint.setTextSize(60 + (stepCounter == mCoords.size() - 1 ? 30 : 0));
-
-            canvas.drawText("" + stepCounter, resNode.boundingBox.left, resNode.boundingBox.top, textPaint);
+            canvas.drawText("" + stepCounter, node.boundingBox.left, node.boundingBox.top, kTEXT_PAINT);
 
             stepCounter++;
         }
 
         getHolder().unlockCanvasAndPost(canvas);
+    }
 
-        SoundPlayer.get().play(SoundPlayer.Effect.beep);
-        return 200;
+    static {
+        kTEXT_PAINT = new TextPaint();
+
+        kTEXT_PAINT.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
+        kTEXT_PAINT.setColor(Color.argb(200, 255, 0, 0));
+        kTEXT_PAINT.setAntiAlias(true);
     }
 }
