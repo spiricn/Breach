@@ -31,33 +31,91 @@ import com.limber.breach.solver.Solver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
+/**
+ * Calculates and shows the correct solution on screen
+ */
 public class SolutionFragment extends Fragment {
     public SolutionFragment() {
         super(R.layout.fragment_solution);
     }
 
+    /**
+     * Allowed buffer range
+     */
     private static final int kMAX_BUFFER_SIZE = 8;
     private static final int kMIN_BUFFER_SIZE = 3;
+
+    /**
+     * Start buffer size
+     */
     private static final int kSTART_BUFFER_SIZE = 4;
 
+    /**
+     * If solution is calculated faster than this, wait a bit
+     */
     private static final long kMIN_SOLVE_DURATION_MS = 1500;
 
-    SolutionFragmentArgs mArgs;
-    Button mSolveButton;
-    Button mRetryButton;
-    Button mIncraseBufferButton;
-    Button mDecreaseBufferButton;
-    long mSolveStartTimestamp;
-    Handler mDelayHandler;
+    /**
+     * Fragment arguments
+     */
+    private SolutionFragmentArgs mArgs;
 
-    AGridAnimation mCurrentAnimation = null;
+    /**
+     * Starts solve procedure
+     */
+    private Button mSolveButton;
+
+    /**
+     * Retries capture
+     */
+    private Button mRetryButton;
+
+    /**
+     * Increases buffer size
+     */
+    private Button mIncreaseBufferButton;
+
+    /**
+     * Decreases buffer size
+     */
+    private Button mDecreaseBufferButton;
+
+    /**
+     * System clock timestamp before solve was started
+     */
+    private long mSolveStartTimestamp;
+
+    /**
+     * Used to delay working animation if too fast
+     */
+    private Handler mDelayHandler;
+
+    /**
+     * Current grid animation
+     */
+    private AGridAnimation mCurrentAnimation = null;
+
+    /**
+     * Target surface holder
+     */
+    private SurfaceHolder mHolder;
+
+    /**
+     * Solves the analyzed grids
+     */
+    private Solver mSolver;
+
+    /**
+     * Current buffer size
+     */
+    private int mCurrentBufferSize = 4;
 
     @Override
     public void onDestroyView() {
+        stopSolving();
+
         super.onDestroyView();
-        stop();
     }
 
     @Override
@@ -67,39 +125,26 @@ public class SolutionFragment extends Fragment {
         mArgs = SolutionFragmentArgs.fromBundle(requireArguments());
 
         mRetryButton = view.findViewById(R.id.btnRetry);
-
-        mRetryButton.setOnClickListener(view1 -> {
-            boolean abort = mSolver != null;
-
-            stop();
-
-            SoundPlayer.get().play(SoundPlayer.Effect.cancel);
-            Vibrator.get().play(Vibrator.Effect.ok);
-
-            if (abort) {
-                return;
-            }
-
-            NavDirections action = SolutionFragmentDirections.actionSolutionFragmentToCaptureFragment();
-            Navigation.findNavController(requireView()).navigate(action);
-        });
+        mRetryButton.setOnClickListener(view1 -> cancelOrRetry());
 
         setBufferSize(kSTART_BUFFER_SIZE);
 
         mDecreaseBufferButton = view.findViewById(R.id.buttonDecreaseBuffer);
         mDecreaseBufferButton.setOnClickListener(view12 -> changeBufferSize(-1));
 
-        mIncraseBufferButton = view.findViewById(R.id.buttonIncreaseBuffer);
-        mIncraseBufferButton.setOnClickListener(view12 -> changeBufferSize(1));
+        mIncreaseBufferButton = view.findViewById(R.id.buttonIncreaseBuffer);
+        mIncreaseBufferButton.setOnClickListener(view12 -> changeBufferSize(1));
 
         ((SurfaceView) view.findViewById(R.id.solutionSurface)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-                draw(surfaceHolder);
+                mHolder = surfaceHolder;
+                redraw();
             }
 
             @Override
             public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                redraw();
             }
 
             @Override
@@ -108,119 +153,147 @@ public class SolutionFragment extends Fragment {
         });
 
         mSolveButton = view.findViewById(R.id.btnSolve);
-
-        view.findViewById(R.id.btnSolve).setOnClickListener(v -> {
-            mSolveStartTimestamp = System.currentTimeMillis();
-
-            stop();
-
-            mCurrentAnimation = new WorkingAnimation(this, mHolder, mArgs.getResult());
-            mCurrentAnimation.start();
-
-            Vibrator.get().play(Vibrator.Effect.ok);
-
-            setInputEnabled(false);
-
-            ProgressBar progressBar = requireView().findViewById(R.id.progressBar);
-            mRetryButton.setText(R.string.btnCancel);
-
-            progressBar.setVisibility(View.VISIBLE);
-
-            SoundPlayer.get().play(SoundPlayer.Effect.working, true);
-
-            draw();
-
-            Canvas canvas = mHolder.lockCanvas();
-
-            Result result = mArgs.getResult();
-
-            DrawUtils.highlightNodes(result.matrix, canvas);
-
-            mHolder.unlockCanvasAndPost(canvas);
-
-
-            List<List<Integer>> matrix = convertRows(result.matrix.rows);
-            List<List<Integer>> sequences = convertRows(result.sequences.rows);
-
-            mSolver = new Solver(matrix, sequences, mBufferSize, new Solver.IListener() {
-                @Override
-                public void onAborted() {
-                    stop();
-                }
-
-                @Override
-                public void onSolved(PathScore result) {
-                    long solveDuration = System.currentTimeMillis() - mSolveStartTimestamp;
-
-                    Runnable resultRunnable = () -> {
-                        stop();
-
-                        mCurrentAnimation = new SolutionAnimation(SolutionFragment.this, mHolder, mArgs.getResult(), result);
-                        mCurrentAnimation.start();
-
-                        Vibrator.get().play(Vibrator.Effect.success);
-                    };
-
-                    if (solveDuration >= kMIN_SOLVE_DURATION_MS) {
-                        resultRunnable.run();
-                    } else {
-                        mDelayHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
-                    }
-                }
-            }, new Handler(Looper.getMainLooper()));
-
-            mSolver.start();
-        });
+        view.findViewById(R.id.btnSolve).setOnClickListener(v -> solve());
     }
 
-    SurfaceHolder mHolder;
-    Solver mSolver;
-    int mBufferSize = 4;
+    /**
+     * Start solving
+     */
+    private void solve() {
+        // Start measuring time
+        mSolveStartTimestamp = System.currentTimeMillis();
 
-    void setInputEnabled(boolean enabled) {
+        stopSolving();
+
+        // Show the working animation
+        mCurrentAnimation = new WorkingAnimation(this, mHolder, mArgs.getResult());
+        mCurrentAnimation.start();
+
+        Vibrator.get().play(Vibrator.Effect.ok);
+        SoundPlayer.get().play(SoundPlayer.Effect.working, true);
+
+        // Disable user input & show loading spinner
+        setInputEnabled(false);
+        ProgressBar progressBar = requireView().findViewById(R.id.progressBar);
+        mRetryButton.setText(R.string.btnCancel);
+        progressBar.setVisibility(View.VISIBLE);
+
+        Result result = mArgs.getResult();
+
+        // Start solving
+        List<List<Integer>> matrix = getRowValues(result.matrix.rows);
+        List<List<Integer>> sequences = getRowValues(result.sequences.rows);
+        mSolver = new Solver(matrix, sequences, mCurrentBufferSize, new Solver.IListener() {
+            @Override
+            public void onAborted() {
+                stopSolving();
+            }
+
+            @Override
+            public void onSolved(PathScore result) {
+                if (getView() == null) {
+                    return;
+                }
+
+                // If we finished too fast, delay the animation a bit (better UX)
+                long solveDuration = System.currentTimeMillis() - mSolveStartTimestamp;
+
+                Runnable resultRunnable = () -> {
+                    stopSolving();
+
+                    mCurrentAnimation = new SolutionAnimation(SolutionFragment.this, mHolder, mArgs.getResult(), result);
+                    mCurrentAnimation.start();
+
+                    Vibrator.get().play(Vibrator.Effect.success);
+                };
+
+                if (solveDuration >= kMIN_SOLVE_DURATION_MS) {
+                    // Show solution right away
+                    resultRunnable.run();
+                } else {
+                    // Delay
+                    mDelayHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
+                }
+            }
+        }, new Handler(Looper.getMainLooper()));
+
+        mSolver.start();
+    }
+
+    /**
+     * Cancel ongoing solves or retry from the top
+     */
+    private void cancelOrRetry() {
+        boolean abort = mSolver != null;
+
+        stopSolving();
+
+        SoundPlayer.get().play(SoundPlayer.Effect.cancel);
+        Vibrator.get().play(Vibrator.Effect.ok);
+
+        if (abort) {
+            redraw();
+            return;
+        }
+
+        NavDirections action = SolutionFragmentDirections.actionSolutionFragmentToCaptureFragment();
+        Navigation.findNavController(requireView()).navigate(action);
+    }
+
+    /**
+     * Enable or disable user input
+     */
+    private void setInputEnabled(boolean enabled) {
         mSolveButton.setEnabled(enabled);
 
         if (enabled) {
             refreshBufferButtons();
         } else {
-            mIncraseBufferButton.setEnabled(enabled);
-            mDecreaseBufferButton.setEnabled(enabled);
+            mIncreaseBufferButton.setEnabled(false);
+            mDecreaseBufferButton.setEnabled(false);
         }
     }
 
-    void changeBufferSize(int delta) {
+    /**
+     * Change the buffer size by given delta
+     */
+    private void changeBufferSize(int delta) {
         SoundPlayer.get().play(SoundPlayer.Effect.short_beep);
         Vibrator.get().play(Vibrator.Effect.short_beep);
-        setBufferSize(mBufferSize + delta);
+        setBufferSize(mCurrentBufferSize + delta);
 
         refreshBufferButtons();
     }
 
-    void refreshBufferButtons() {
-        mIncraseBufferButton.setEnabled(mBufferSize < kMAX_BUFFER_SIZE);
-        mDecreaseBufferButton.setEnabled(mBufferSize > kMIN_BUFFER_SIZE);
+    /**
+     * Refresh buffer button states
+     */
+    private void refreshBufferButtons() {
+        mIncreaseBufferButton.setEnabled(mCurrentBufferSize < kMAX_BUFFER_SIZE);
+        mDecreaseBufferButton.setEnabled(mCurrentBufferSize > kMIN_BUFFER_SIZE);
     }
 
-    void setBufferSize(int bufferSize) {
-        mBufferSize = bufferSize;
-        if (mBufferSize > kMAX_BUFFER_SIZE) {
-            mBufferSize = kMAX_BUFFER_SIZE;
+    /**
+     * Set a buffer size
+     */
+    private void setBufferSize(int bufferSize) {
+        mCurrentBufferSize = bufferSize;
+        if (mCurrentBufferSize > kMAX_BUFFER_SIZE) {
+            mCurrentBufferSize = kMAX_BUFFER_SIZE;
         }
-        if (mBufferSize < kMIN_BUFFER_SIZE) {
-            mBufferSize = kMIN_BUFFER_SIZE;
+        if (mCurrentBufferSize < kMIN_BUFFER_SIZE) {
+            mCurrentBufferSize = kMIN_BUFFER_SIZE;
         }
 
         ((TextView) requireView().findViewById(R.id.bufferSize)).setText(
-                String.format(Locale.ENGLISH, "%d", mBufferSize)
+                String.format(Locale.ENGLISH, "%d", mCurrentBufferSize)
         );
     }
 
-    void draw() {
-        Objects.requireNonNull(mHolder);
-        draw(mHolder);
-    }
-
-    void stop() {
+    /**
+     * Stop ongoing solve calculations (if any)
+     */
+    private void stopSolving() {
         mDelayHandler.removeCallbacksAndMessages(null);
 
         if (mSolver != null) {
@@ -239,26 +312,23 @@ public class SolutionFragment extends Fragment {
         }
     }
 
-
-    void draw(SurfaceHolder holder) {
-        mHolder = holder;
-
-        Canvas canvas = holder.lockCanvas();
+    /**
+     * Redraw the grid
+     */
+    private void redraw() {
+        Canvas canvas = mHolder.lockCanvas();
 
         Result result = mArgs.getResult();
 
         DrawUtils.drawGrid(result.matrix, result.bitmap, canvas);
 
-        holder.unlockCanvasAndPost(canvas);
+        mHolder.unlockCanvasAndPost(canvas);
     }
-//
-//    void showResult(PathScore pathScore) {
-//        SoundPlayer.get().play(SoundPlayer.Effect.success);
-//
-//    }
 
-
-    static List<List<Integer>> convertRows(List<List<Node>> inRows) {
+    /**
+     * Extract row values from nodes
+     */
+    private static List<List<Integer>> getRowValues(List<List<Node>> inRows) {
         List<List<Integer>> rows = new ArrayList<>();
 
         for (List<Node> row : inRows) {
@@ -272,5 +342,4 @@ public class SolutionFragment extends Fragment {
 
         return rows;
     }
-
 }
