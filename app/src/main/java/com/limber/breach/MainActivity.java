@@ -16,28 +16,46 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.limber.breach.fragments.CaptureFragmentDirections;
-import com.limber.breach.fragments.VerifyFragmentDirections;
 import com.limber.breach.utils.SoundPlayer;
 import com.limber.breach.utils.Vibrator;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
 
+    /**
+     * Preferences name
+     */
     private static final String kPREFS_NAME = "BreachPrefs";
+
+    /**
+     * Vibration setting preference key
+     */
     private static final String kPREFS_KEY_VIBRATION_ENABLED = "VibrationEnabled";
+
+    /**
+     * Sound setting preference key
+     */
     private static final String kPREFS_KEY_SOUND_ENABLED = "SoundEnabled";
 
+    /**
+     * Permissions we need
+     */
     private static final String[] PERMISSIONS = {
             android.Manifest.permission.CAMERA,
             android.Manifest.permission.VIBRATE
     };
+
+    /**
+     * Preferences handle
+     */
+    private SharedPreferences mPrefs;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -49,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        // Check/un-check menu options
         for (int i = 0; i < menu.size(); i++) {
             MenuItem item = menu.getItem(i);
             if (item.getItemId() == R.id.menuToggleSound) {
@@ -74,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
             boolean state = !mPrefs.getBoolean(settingsKey, true);
             mPrefs.edit().putBoolean(settingsKey, state).apply();
-            updatePrefs();
+            loadSettings();
 
             if (item.getItemId() == R.id.menuToggleSound) {
                 SoundPlayer.get().play(this, SoundPlayer.Effect.success);
@@ -84,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         } else if (item.getItemId() == R.id.menuLoadExample) {
+            // Load example scan
             NavGraphDirections.ActionGlobalCaptureFragment action = CaptureFragmentDirections.actionGlobalCaptureFragment()
                     .setBitmap(BitmapFactory.decodeResource(getResources(),
                             R.drawable.test_5x5_3_01));
@@ -96,23 +116,27 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    void updatePrefs() {
+    /**
+     * Configure components based on loaded settings
+     */
+    private void loadSettings() {
         SoundPlayer.get().setEnabled(mPrefs.getBoolean(kPREFS_KEY_SOUND_ENABLED, true));
         Vibrator.get().setEnabled(mPrefs.getBoolean(kPREFS_KEY_VIBRATION_ENABLED, true));
     }
 
-    SharedPreferences mPrefs;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Force dark mode, since that's what the UI was built around
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
         mPrefs = getSharedPreferences(kPREFS_NAME, Context.MODE_PRIVATE);
 
         SoundPlayer.create();
         Vibrator.create(this);
 
-        updatePrefs();
+        loadSettings();
 
         // Make application fullscreen
         getWindow().setFlags(
@@ -131,9 +155,11 @@ public class MainActivity extends AppCompatActivity {
         checkPermissions();
     }
 
-    void start() {
+    /**
+     * Start the application
+     */
+    private void start() {
         setContentView(R.layout.activity_main);
-
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
 
@@ -153,7 +179,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void checkPermissions() {
+    /**
+     * Check if we have all the permissions we need, otherwise make the request
+     */
+    private void checkPermissions() {
         if (!hasPermissions(this, PERMISSIONS)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(PERMISSIONS,
@@ -163,7 +192,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    boolean allPermissionsGranted() {
+    /**
+     * Check if we have all the permissions
+     */
+    private boolean allPermissionsGranted() {
         for (String permission : PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 return false;
@@ -171,11 +203,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return true;
-
-
     }
 
-    public static boolean hasPermissions(Context context, String... permissions) {
+    /**
+     * Check if we have all the permissions needed
+     */
+    private static boolean hasPermissions(Context context, String... permissions) {
         if (context != null && permissions != null) {
             for (String permission : permissions) {
                 if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
