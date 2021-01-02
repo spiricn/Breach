@@ -20,7 +20,7 @@ import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
 import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.Grid;
-import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 
 import java.util.List;
@@ -109,8 +109,8 @@ public class VerifyFragment extends Fragment {
         textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
         textPaint.setColor(Color.argb(200, 255, 0, 0));
 
-        for (List<GridNode> nodeRow : grid.nodes) {
-            for (GridNode node : nodeRow) {
+        for (List<Node> nodeRow : grid.rows) {
+            for (Node node : nodeRow) {
                 canvas.drawText(node.text, node.boundingBox.left, node.boundingBox.top, textPaint);
             }
         }

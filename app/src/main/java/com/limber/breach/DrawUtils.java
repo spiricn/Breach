@@ -7,14 +7,14 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 
 import com.limber.breach.analyzer.Grid;
-import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Node;
 
 import java.util.List;
 
 public class DrawUtils {
     public static Rect getRect(Grid grid) {
 
-        GridNode node = grid.nodes.get(0).get(0);
+        Node node = grid.rows.get(0).get(0);
 
         int horizontal = node.boundingBox.width() * 4;
         int vertical = node.boundingBox.height() * 4;
@@ -60,11 +60,11 @@ public class DrawUtils {
         highlightNodes(grid, canvas, null, boundaryPaint);
     }
 
-    public static void highlightNodes(Grid grid, Canvas canvas, List<GridNode> nodes, Paint boundaryPaint) {
+    public static void highlightNodes(Grid grid, Canvas canvas, List<Node> nodes, Paint boundaryPaint) {
         scaleFor(canvas, getRect(grid));
 
-        for (List<GridNode> nodeRow : grid.nodes) {
-            for (GridNode node : nodeRow) {
+        for (List<Node> nodeRow : grid.rows) {
+            for (Node node : nodeRow) {
                 if (nodes == null || nodes.contains(node)) {
                     canvas.drawRect(node.boundingBox, boundaryPaint);
                 }

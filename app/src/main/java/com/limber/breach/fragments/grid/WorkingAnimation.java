@@ -8,7 +8,7 @@ import android.view.SurfaceHolder;
 import androidx.fragment.app.Fragment;
 
 import com.limber.breach.DrawUtils;
-import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 
 import java.util.ArrayList;
@@ -17,9 +17,9 @@ import java.util.Random;
 
 public class WorkingAnimation extends AGridAnimation {
 
-    private final List<GridNode> mAllNodes = new ArrayList<>();
-    private final List<GridNode> mCurrentNodes = new ArrayList<>();
-    private List<GridNode> mPopInNodes = null;
+    private final List<Node> mAllNodes = new ArrayList<>();
+    private final List<Node> mCurrentNodes = new ArrayList<>();
+    private List<Node> mPopInNodes = null;
     Random mRandom = new Random();
     boolean mDirectionPopIn = true;
     Result mResult;
@@ -28,7 +28,7 @@ public class WorkingAnimation extends AGridAnimation {
         super(fragment, holder);
         mResult = result;
 
-        for (List<GridNode> row : mResult.matrix.nodes) {
+        for (List<Node> row : mResult.matrix.rows) {
             mAllNodes.addAll(row);
         }
     }

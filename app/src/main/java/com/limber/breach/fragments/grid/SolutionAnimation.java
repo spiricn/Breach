@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment;
 
 import com.limber.breach.DrawUtils;
 import com.limber.breach.SoundPlayer;
-import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 import com.limber.breach.solver.Coordinate;
 import com.limber.breach.solver.PathScore;
@@ -55,7 +55,7 @@ public class SolutionAnimation extends AGridAnimation {
         int stepCounter = 0;
         for (Coordinate coord : mCoords) {
 
-            GridNode resNode = mResult.matrix.nodes.get(coord.row).get(coord.column);
+            Node resNode = mResult.matrix.rows.get(coord.row).get(coord.column);
 
             textPaint.setTextSize(60 + (stepCounter == mCoords.size() - 1 ? 30 : 0));
 

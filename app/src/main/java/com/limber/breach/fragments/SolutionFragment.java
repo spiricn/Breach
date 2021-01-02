@@ -1,13 +1,9 @@
 package com.limber.breach.fragments;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextPaint;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -24,12 +20,11 @@ import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
 import com.limber.breach.SoundPlayer;
 import com.limber.breach.Vibrator;
-import com.limber.breach.analyzer.GridNode;
+import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 import com.limber.breach.fragments.grid.AGridAnimation;
 import com.limber.breach.fragments.grid.SolutionAnimation;
 import com.limber.breach.fragments.grid.WorkingAnimation;
-import com.limber.breach.solver.Coordinate;
 import com.limber.breach.solver.PathScore;
 import com.limber.breach.solver.Solver;
 
@@ -37,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Random;
 
 public class SolutionFragment extends Fragment {
     public SolutionFragment() {
@@ -145,8 +139,8 @@ public class SolutionFragment extends Fragment {
             mHolder.unlockCanvasAndPost(canvas);
 
 
-            List<List<Integer>> matrix = convertRows(result.matrix.nodes);
-            List<List<Integer>> sequences = convertRows(result.sequences.nodes);
+            List<List<Integer>> matrix = convertRows(result.matrix.rows);
+            List<List<Integer>> sequences = convertRows(result.sequences.rows);
 
             mSolver = new Solver(matrix, sequences, mBufferSize, new Solver.IListener() {
                 @Override
@@ -264,12 +258,12 @@ public class SolutionFragment extends Fragment {
 //    }
 
 
-    static List<List<Integer>> convertRows(List<List<GridNode>> inRows) {
+    static List<List<Integer>> convertRows(List<List<Node>> inRows) {
         List<List<Integer>> rows = new ArrayList<>();
 
-        for (List<GridNode> row : inRows) {
+        for (List<Node> row : inRows) {
             List<Integer> irow = new ArrayList<>();
-            for (GridNode node : row) {
+            for (Node node : row) {
                 irow.add(Integer.parseInt(node.text, 16));
             }
 

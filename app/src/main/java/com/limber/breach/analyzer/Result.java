@@ -5,9 +5,23 @@ import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/**
+ * Bitmap analysis result
+ */
 public class Result implements Parcelable {
+    /**
+     * Matrix grid
+     */
     public Grid matrix;
+
+    /**
+     * Sequences grid
+     */
     public Grid sequences;
+
+    /**
+     * Source bitmap
+     */
     public Bitmap bitmap;
 
     protected Result(Parcel in) {

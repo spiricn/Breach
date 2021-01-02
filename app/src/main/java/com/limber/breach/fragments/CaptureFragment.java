@@ -3,7 +3,9 @@ package com.limber.breach.fragments;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 
@@ -31,41 +33,81 @@ import com.limber.breach.SoundPlayer;
 import java.util.concurrent.ExecutionException;
 
 public class CaptureFragment extends Fragment {
+
+    /**
+     * Camera capture button
+     */
+    private Button mCaptureButton;
+
+    /**
+     * Life cycle aware handler, used to execute all callbacks
+     */
+    private Handler mHandler;
+
+    /**
+     * Used to show notifications to the user
+     */
+    private Snackbar mSnackbar = null;
+
+    /**
+     * Camera capture interface
+     */
+    private ImageCapture mImageCapture;
+
     public CaptureFragment() {
         super(R.layout.fragment_capture);
     }
 
-    Button mButton;
-
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        mButton = view.findViewById(R.id.camera_capture_button);
-        mButton.setEnabled(false);
+        mCaptureButton = view.findViewById(R.id.camera_capture_button);
+        mCaptureButton.setEnabled(false);
 
-        CaptureFragmentArgs args = CaptureFragmentArgs.fromBundle(getArguments());
+        mHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void dispatchMessage(@NonNull Message msg) {
+                if (getView() == null) {
+                    // Ignore all callbacks if fragment was destroyed
+                    return;
+                }
+
+                super.dispatchMessage(msg);
+            }
+        };
+
+        CaptureFragmentArgs args = CaptureFragmentArgs.fromBundle(requireArguments());
         if (args.getBitmap() != null) {
-            view.post(() -> onCaptured(args.getBitmap()));
+            // No need to capture our own bitmap since we got it from elsewhere
+            view.post(() -> analyzeBitmap(args.getBitmap()));
             return;
         }
 
-        mButton.setOnClickListener(view1 -> capture());
-        initialize();
+        // Use the camera to capture bitmap
+        mCaptureButton.setOnClickListener(view1 -> captureBitmap());
+        initializeCamera();
     }
 
     @Override
     public void onDestroyView() {
-        getArguments().clear();
+        // Clear cached arguments
+        requireArguments().clear();
 
+        // Ignore pending callbacks
+        mHandler.removeCallbacksAndMessages(null);
         super.onDestroyView();
     }
 
-    private void capture() {
-        mButton.setEnabled(false);
+    /**
+     * Capture a bitmap from the camera
+     */
+    private void captureBitmap() {
+        mCaptureButton.setEnabled(false);
         if (mSnackbar != null) {
             mSnackbar.dismiss();
         }
 
         Vibrator.get().play(Vibrator.Effect.ok);
+
         mImageCapture.takePicture(
                 ContextCompat.getMainExecutor(requireActivity()),
                 new ImageCapture.OnImageCapturedCallback() {
@@ -78,7 +120,8 @@ public class CaptureFragment extends Fragment {
                         image.close();
                         super.onCaptureSuccess(image);
 
-                        onCaptured(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                        mHandler.post(() -> analyzeBitmap(BitmapFactory.decodeByteArray(bytes, 0, bytes.length)));
+
                     }
 
                     @Override
@@ -86,15 +129,18 @@ public class CaptureFragment extends Fragment {
                         exception.printStackTrace();
                         super.onError(exception);
 
-                        Snackbar.make(requireView(),
+                        mHandler.post(() -> Snackbar.make(requireView(),
                                 R.string.errorTakePicture, Snackbar.LENGTH_LONG)
-                                .show();
+                                .show());
                     }
                 }
         );
     }
 
-    void onCaptured(Bitmap bitmap) {
+    /**
+     * Analyze a captured bitmap
+     */
+    private void analyzeBitmap(Bitmap bitmap) {
         Analyzer.analyze(bitmap, result -> {
             SoundPlayer.get().play(SoundPlayer.Effect.success);
             Vibrator.get().play(Vibrator.Effect.success);
@@ -110,22 +156,21 @@ public class CaptureFragment extends Fragment {
                     .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE);
             mSnackbar.show();
 
-            mButton.setEnabled(true);
-        });
+            mCaptureButton.setEnabled(true);
+        }, mHandler);
     }
 
-    Snackbar mSnackbar = null;
+    /**
+     * Set up camera & preview
+     */
+    private void initializeCamera() {
+        ListenableFuture<ProcessCameraProvider> future = ProcessCameraProvider.getInstance(requireActivity());
 
-
-    void initialize() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireActivity());
-
-        cameraProviderFuture.addListener(() -> {
+        future.addListener(() -> mHandler.post(() -> {
             ProcessCameraProvider cameraProvider;
             try {
-                cameraProvider = cameraProviderFuture.get();
+                cameraProvider = future.get();
             } catch (ExecutionException | InterruptedException e) {
-                // TODO
                 e.printStackTrace();
                 return;
             }
@@ -143,10 +188,7 @@ public class CaptureFragment extends Fragment {
             cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, mImageCapture);
 
-            mButton.setEnabled(true);
-
-        }, ContextCompat.getMainExecutor(requireActivity()));
+            mCaptureButton.setEnabled(true);
+        }), ContextCompat.getMainExecutor(requireActivity()));
     }
-
-    private ImageCapture mImageCapture;
 }

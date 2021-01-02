@@ -8,18 +8,28 @@ import android.os.Parcelable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Grid of analyzed text pieces
+ */
 public class Grid implements Parcelable {
-    public List<List<GridNode>> nodes;
+    /**
+     * List of node rows
+     */
+    public List<List<Node>> rows;
+
+    /**
+     * Grid bounding box (union of all node bounding boxes)
+     */
     public Rect boundingBox;
 
     protected Grid(Parcel in) {
         boundingBox = in.readParcelable(Rect.class.getClassLoader());
 
-        nodes = new ArrayList<>();
+        rows = new ArrayList<>();
 
         int numRows = in.readInt();
         for (int i = 0; i < numRows; i++) {
-            nodes.add(in.createTypedArrayList(GridNode.CREATOR));
+            rows.add(in.createTypedArrayList(Node.CREATOR));
         }
     }
 
@@ -36,7 +46,7 @@ public class Grid implements Parcelable {
     };
 
     public Grid() {
-        this.nodes = new ArrayList<>();
+        this.rows = new ArrayList<>();
     }
 
     @Override
@@ -46,8 +56,8 @@ public class Grid implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeInt(nodes.size());
-        for (List<GridNode> rows : this.nodes) {
+        parcel.writeInt(rows.size());
+        for (List<Node> rows : this.rows) {
             parcel.writeArray(rows.toArray());
         }
 

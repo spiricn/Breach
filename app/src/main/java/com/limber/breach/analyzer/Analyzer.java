@@ -2,6 +2,7 @@ package com.limber.breach.analyzer;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 
@@ -30,7 +31,8 @@ public class Analyzer {
 
     static Bitmap mBmp;
 
-    public static void analyze(Bitmap bitmap, SuccessCallback successCallback, FailedCallback failedCallback) {
+
+    public static void analyze(Bitmap bitmap, SuccessCallback successCallback, FailedCallback failedCallback, Handler handler) {
         mBmp = bitmap;
 
         InputImage image = InputImage.fromBitmap(bitmap, 0);
@@ -38,7 +40,7 @@ public class Analyzer {
 
         recognizer.process(image)
                 .addOnSuccessListener(
-                        texts -> {
+                        texts -> handler.post(() -> {
                             Result result;
                             try {
                                 result = processTextRecognitionResult(texts);
@@ -48,9 +50,8 @@ public class Analyzer {
                             }
 
                             successCallback.onAnalyzed(result);
-                        })
-                .addOnFailureListener(
-                        failedCallback::onFailed);
+                        }))
+                .addOnFailureListener(e -> handler.post(() -> failedCallback.onFailed(e)));
     }
 
     enum Coord {
@@ -77,7 +78,13 @@ public class Analyzer {
         }
     }
 
-    static Pair<Double, Double> getAverageSize(List<Node> nodes) {
+    /**
+     * Given a list of nodes, calculate the average node width/height
+     *
+     * @param nodes List of nodes
+     * @return {width, height} pair
+     */
+    static Pair<Double, Double> calculateAverageNodeSize(List<Node> nodes) {
         double averageWidth = 0;
         double averageHeight = 0;
 
@@ -85,6 +92,7 @@ public class Analyzer {
             averageWidth += Objects.requireNonNull(node.element.getBoundingBox()).width();
             averageHeight += node.element.getBoundingBox().height();
         }
+
         averageHeight /= nodes.size();
         averageWidth /= nodes.size();
 
@@ -135,7 +143,7 @@ public class Analyzer {
         Grid grid = new Grid();
 
         for (List<Node> row : nodes) {
-            ArrayList<GridNode> resRow = new ArrayList<>();
+            ArrayList<com.limber.breach.analyzer.Node> resRow = new ArrayList<>();
 
             for (Node node : row) {
                 if (grid.boundingBox == null) {
@@ -144,10 +152,10 @@ public class Analyzer {
                     grid.boundingBox.union(node.element.getBoundingBox());
                 }
 
-                resRow.add(new GridNode(node.element.getText(), node.element.getBoundingBox()));
+                resRow.add(new com.limber.breach.analyzer.Node(node.element.getText(), node.element.getBoundingBox()));
             }
 
-            grid.nodes.add(resRow);
+            grid.rows.add(resRow);
         }
 
         return grid;
@@ -205,7 +213,7 @@ public class Analyzer {
 
 
         // Average size
-        Pair<Double, Double> averageSize = getAverageSize(nodes);
+        Pair<Double, Double> averageSize = calculateAverageNodeSize(nodes);
         double averageWidth = averageSize.first;
         double averageHeight = averageSize.second;
 
