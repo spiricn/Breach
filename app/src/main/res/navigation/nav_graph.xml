@@ -27,10 +27,6 @@
         android:name="com.limber.breach.fragments.VerifyFragment"
         android:label="FragmentVerify">
         <argument
-            android:name="verifyMatrix"
-            android:defaultValue="true"
-            app:argType="boolean" />
-        <argument
             android:name="analyzeResult"
             app:argType="com.limber.breach.analyzer.Result" />
         <action
@@ -43,7 +39,14 @@
             app:destination="@id/solutionFragment" />
         <action
             android:id="@+id/action_fragmentVerify_self"
-            app:destination="@id/fragmentVerify" />
+            app:destination="@id/fragmentVerify" >
+            <argument
+                android:name="mode"
+                app:argType="com.limber.breach.fragments.VerifyFragment$Mode" />
+        </action>
+        <argument
+            android:name="mode"
+            app:argType="com.limber.breach.fragments.VerifyFragment$Mode" />
     </fragment>
     <fragment
         android:id="@+id/solutionFragment"

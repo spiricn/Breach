@@ -2,7 +2,6 @@ package com.limber.breach.fragments;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextPaint;
@@ -25,54 +24,77 @@ import com.limber.breach.analyzer.Result;
 
 import java.util.List;
 
+/**
+ * Shows the user analyzed grids
+ */
 public class VerifyFragment extends Fragment {
+    /**
+     * Indication if matrices or sequences should be displayed
+     */
+    public enum Mode {
+        /**
+         * Matrix confirmation mode
+         * <p>
+         * If the user confirms it, move on to sequences
+         */
+        matrix,
 
-    VerifyFragmentArgs mArgs;
+        /**
+         * Sequences confirmation mode
+         * <p>
+         * If the user confirms it, move on to the solution
+         */
+        sequences
+    }
+
+    /**
+     * Text paint used to display analyzed text
+     */
+    private static final TextPaint kTEXT_PAINT;
+
+    /**
+     * Input arguments
+     */
+    private VerifyFragmentArgs mArgs;
+
+    /**
+     * Target surface holder
+     */
+    private SurfaceHolder mSurfaceHolder;
 
     public VerifyFragment() {
         super(R.layout.fragment_verify);
     }
 
-    SurfaceView mSurfaceView;
-    SurfaceHolder mSurfaceHolder;
-
-
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         mArgs = VerifyFragmentArgs.fromBundle(requireArguments());
 
-        mSurfaceView = view.findViewById(R.id.surfaceView);
+        view.findViewById(R.id.verify_confirm).setOnClickListener(view1 -> onConfirm());
+        view.findViewById(R.id.verify_retry).setOnClickListener(view1 -> onRetry());
 
-        view.findViewById(R.id.verify_confirm).setOnClickListener(view1 -> {
-            SoundPlayer.get().play(SoundPlayer.Effect.beep);
-            Vibrator.get().play(Vibrator.Effect.ok);
-
-            if (!mArgs.getVerifyMatrix()) {
-                NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());
-
-                Navigation.findNavController(requireView()).navigate(action);
-            } else {
-                NavDirections action = VerifyFragmentDirections.actionFragmentVerifySelf(
-                        mArgs.getAnalyzeResult()
-                ).setVerifyMatrix(false);
-
-                Navigation.findNavController(requireView()).navigate(action);
-            }
-        });
-
-        view.findViewById(R.id.verify_retry).setOnClickListener(view1 -> retry());
-
-        mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+        // Wait for the surface to become available
+        ((SurfaceView) view.findViewById(R.id.surfaceView)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+                if (getView() == null) {
+                    // Fragment destroyed
+                    return;
+                }
+
                 mSurfaceHolder = surfaceHolder;
 
-                draw();
+                redraw();
             }
 
             @Override
             public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-                draw();
+                if (getView() == null) {
+                    // Fragment destroyed
+                    return;
+                }
+
+                redraw();
             }
 
             @Override
@@ -81,40 +103,75 @@ public class VerifyFragment extends Fragment {
         });
     }
 
-    void retry() {
+    /**
+     * Retry capture (user is not happy with the scan result
+     */
+    private void onRetry() {
         SoundPlayer.get().play(SoundPlayer.Effect.cancel);
 
         NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToCaptureFragment();
         Navigation.findNavController(requireView()).navigate(action);
     }
 
-    void draw() {
+    /**
+     * Confirm current grid (user is happy with the scan result)
+     */
+    private void onConfirm() {
+        SoundPlayer.get().play(SoundPlayer.Effect.beep);
+        Vibrator.get().play(Vibrator.Effect.ok);
+
+        switch (mArgs.getMode()) {
+            case matrix: {
+                // Matrix verified, so move on to sequences
+                NavDirections action = VerifyFragmentDirections.actionFragmentVerifySelf(
+                        Mode.sequences,
+                        mArgs.getAnalyzeResult()
+
+                );
+
+                Navigation.findNavController(requireView()).navigate(action);
+                break;
+            }
+            case sequences: {
+                // Sequences verified so move on to the solution
+                NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToSolutionFragment(mArgs.getAnalyzeResult());
+
+                Navigation.findNavController(requireView()).navigate(action);
+                break;
+            }
+        }
+
+    }
+
+    /**
+     * Display the grid to the user
+     */
+    private void redraw() {
         Canvas canvas = mSurfaceHolder.lockCanvas();
 
-        Paint boundaryPaint = new Paint();
-        boundaryPaint.setColor(Color.GREEN);
-        boundaryPaint.setStyle(Paint.Style.STROKE);
-        boundaryPaint.setStrokeWidth(2);
-
+        // Pick a grid based on mode
         Result result = mArgs.getAnalyzeResult();
+        Grid grid = mArgs.getMode() == Mode.matrix ? result.matrix : result.sequences;
 
-
-        Grid grid = mArgs.getVerifyMatrix() ? result.matrix : result.sequences;
-
+        // Render the grid & highlight the nodes
         DrawUtils.drawGrid(grid, result.bitmap, canvas);
         DrawUtils.highlightNodes(grid, canvas);
 
-        TextPaint textPaint = new TextPaint();
-        textPaint.setTextSize(60);
-        textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
-        textPaint.setColor(Color.argb(200, 255, 0, 0));
-
+        // Draw the analyzed text next to the each node
         for (List<Node> nodeRow : grid.rows) {
             for (Node node : nodeRow) {
-                canvas.drawText(node.text, node.boundingBox.left, node.boundingBox.top, textPaint);
+                canvas.drawText(node.text, node.boundingBox.left, node.boundingBox.top, kTEXT_PAINT);
             }
         }
 
         mSurfaceHolder.unlockCanvasAndPost(canvas);
+    }
+
+    static {
+        kTEXT_PAINT = new TextPaint();
+        kTEXT_PAINT.setTextSize(60);
+        kTEXT_PAINT.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
+        kTEXT_PAINT.setColor(Color.argb(200, 255, 0, 0));
+
     }
 }

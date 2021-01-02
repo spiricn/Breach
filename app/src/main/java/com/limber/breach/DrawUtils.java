@@ -12,6 +12,15 @@ import com.limber.breach.analyzer.Node;
 import java.util.List;
 
 public class DrawUtils {
+    public static final Paint kBOUNDARY_PAINT;
+
+    static {
+        kBOUNDARY_PAINT = new Paint();
+        kBOUNDARY_PAINT.setColor(Color.GREEN);
+        kBOUNDARY_PAINT.setStyle(Paint.Style.STROKE);
+        kBOUNDARY_PAINT.setStrokeWidth(2);
+    }
+
     public static Rect getRect(Grid grid) {
 
         Node node = grid.rows.get(0).get(0);
@@ -51,13 +60,7 @@ public class DrawUtils {
     }
 
     public static void highlightNodes(Grid grid, Canvas canvas) {
-        Paint boundaryPaint = new Paint();
-        boundaryPaint.setColor(Color.GREEN);
-        boundaryPaint.setStyle(Paint.Style.STROKE);
-        boundaryPaint.setStrokeWidth(2);
-
-
-        highlightNodes(grid, canvas, null, boundaryPaint);
+        highlightNodes(grid, canvas, null, kBOUNDARY_PAINT);
     }
 
     public static void highlightNodes(Grid grid, Canvas canvas, List<Node> nodes, Paint boundaryPaint) {

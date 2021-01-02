@@ -32,6 +32,9 @@ import com.limber.breach.SoundPlayer;
 
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Captures a bitmap from camera and analyzes it
+ */
 public class CaptureFragment extends Fragment {
 
     /**
@@ -144,7 +147,7 @@ public class CaptureFragment extends Fragment {
         Analyzer.analyze(bitmap, result -> {
             SoundPlayer.get().play(SoundPlayer.Effect.success);
             Vibrator.get().play(Vibrator.Effect.success);
-            NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToFragmentVerify(result);
+            NavDirections action = CaptureFragmentDirections.actionCaptureFragmentToFragmentVerify(result, VerifyFragment.Mode.matrix);
             Navigation.findNavController(requireView()).navigate(action);
         }, error -> {
             SoundPlayer.get().play(SoundPlayer.Effect.error);
