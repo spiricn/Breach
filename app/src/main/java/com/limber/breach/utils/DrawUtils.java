@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

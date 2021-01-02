@@ -5,9 +5,9 @@ import android.view.SurfaceHolder;
 
 import androidx.fragment.app.Fragment;
 
-import com.limber.breach.DrawUtils;
 import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
+import com.limber.breach.utils.DrawUtils;
 
 import java.util.ArrayList;
 import java.util.List;

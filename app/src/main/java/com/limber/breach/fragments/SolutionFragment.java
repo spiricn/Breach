@@ -16,10 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
-import com.limber.breach.SoundPlayer;
-import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 import com.limber.breach.fragments.grid.AGridAnimation;
@@ -27,6 +24,9 @@ import com.limber.breach.fragments.grid.SolutionAnimation;
 import com.limber.breach.fragments.grid.WorkingAnimation;
 import com.limber.breach.solver.PathScore;
 import com.limber.breach.solver.Solver;
+import com.limber.breach.utils.DrawUtils;
+import com.limber.breach.utils.SoundPlayer;
+import com.limber.breach.utils.Vibrator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -170,7 +170,7 @@ public class SolutionFragment extends Fragment {
         mCurrentAnimation.start();
 
         Vibrator.get().play(Vibrator.Effect.ok);
-        SoundPlayer.get().play(SoundPlayer.Effect.working, true);
+        SoundPlayer.get().play(getContext(), SoundPlayer.Effect.working, true);
 
         // Disable user input & show loading spinner
         setInputEnabled(false);
@@ -228,7 +228,7 @@ public class SolutionFragment extends Fragment {
 
         stopSolving();
 
-        SoundPlayer.get().play(SoundPlayer.Effect.cancel);
+        SoundPlayer.get().play(getContext(), SoundPlayer.Effect.cancel);
         Vibrator.get().play(Vibrator.Effect.ok);
 
         if (abort) {
@@ -258,7 +258,7 @@ public class SolutionFragment extends Fragment {
      * Change the buffer size by given delta
      */
     private void changeBufferSize(int delta) {
-        SoundPlayer.get().play(SoundPlayer.Effect.short_beep);
+        SoundPlayer.get().play(getContext(), SoundPlayer.Effect.short_beep);
         Vibrator.get().play(Vibrator.Effect.short_beep);
         setBufferSize(mCurrentBufferSize + delta);
 

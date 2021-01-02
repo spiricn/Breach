@@ -2,6 +2,7 @@ package com.limber.breach.fragments.grid;
 
 import android.os.Handler;
 import android.view.SurfaceHolder;
+import android.widget.FrameLayout;
 
 import androidx.fragment.app.Fragment;
 
@@ -24,9 +25,19 @@ public abstract class AGridAnimation {
      */
     private boolean mRunning = false;
 
+    /**
+     * Parent fragment
+     */
+    private Fragment mFragment;
+
     protected AGridAnimation(Fragment fragment, SurfaceHolder holder) {
         mHandler = new Handler(fragment.requireActivity().getMainLooper());
         mHolder = holder;
+        mFragment = fragment;
+    }
+
+    protected Fragment getFragment() {
+        return mFragment;
     }
 
     protected SurfaceHolder getHolder() {

@@ -14,13 +14,13 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
-import com.limber.breach.DrawUtils;
 import com.limber.breach.R;
-import com.limber.breach.SoundPlayer;
-import com.limber.breach.Vibrator;
 import com.limber.breach.analyzer.Grid;
 import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
+import com.limber.breach.utils.DrawUtils;
+import com.limber.breach.utils.SoundPlayer;
+import com.limber.breach.utils.Vibrator;
 
 import java.util.List;
 
@@ -107,7 +107,7 @@ public class VerifyFragment extends Fragment {
      * Retry capture (user is not happy with the scan result
      */
     private void onRetry() {
-        SoundPlayer.get().play(SoundPlayer.Effect.cancel);
+        SoundPlayer.get().play(getContext(), SoundPlayer.Effect.cancel);
 
         NavDirections action = VerifyFragmentDirections.actionFragmentVerifyToCaptureFragment();
         Navigation.findNavController(requireView()).navigate(action);
@@ -117,7 +117,7 @@ public class VerifyFragment extends Fragment {
      * Confirm current grid (user is happy with the scan result)
      */
     private void onConfirm() {
-        SoundPlayer.get().play(SoundPlayer.Effect.beep);
+        SoundPlayer.get().play(getContext(), SoundPlayer.Effect.beep);
         Vibrator.get().play(Vibrator.Effect.ok);
 
         switch (mArgs.getMode()) {

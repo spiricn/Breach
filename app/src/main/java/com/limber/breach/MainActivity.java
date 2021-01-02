@@ -24,6 +24,8 @@ import androidx.navigation.Navigation;
 import com.google.android.material.snackbar.Snackbar;
 import com.limber.breach.fragments.CaptureFragmentDirections;
 import com.limber.breach.fragments.VerifyFragmentDirections;
+import com.limber.breach.utils.SoundPlayer;
+import com.limber.breach.utils.Vibrator;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
@@ -75,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             updatePrefs();
 
             if (item.getItemId() == R.id.menuToggleSound) {
-                SoundPlayer.get().play(SoundPlayer.Effect.success);
+                SoundPlayer.get().play(this, SoundPlayer.Effect.success);
             } else {
                 Vibrator.get().play(Vibrator.Effect.success);
             }
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         mPrefs = getSharedPreferences(kPREFS_NAME, Context.MODE_PRIVATE);
 
-        SoundPlayer.create(this);
+        SoundPlayer.create();
         Vibrator.create(this);
 
         updatePrefs();

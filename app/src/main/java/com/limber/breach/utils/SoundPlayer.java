@@ -1,4 +1,4 @@
-package com.limber.breach;
+package com.limber.breach.utils;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -9,10 +9,16 @@ import android.os.HandlerThread;
 
 import java.io.IOException;
 
+/**
+ * Plays application sound effects
+ */
 public class SoundPlayer {
 
-    Context mContext;
-
+    /**
+     * Available sound effects
+     * <p>
+     * Each one maps to an MP3 file from the assets
+     */
     public enum Effect {
         error("error"),
         beep("beep"),
@@ -32,57 +38,85 @@ public class SoundPlayer {
         String mName;
     }
 
-    SoundPlayer(Context context) {
-        mContext = context;
-        mThread = new HandlerThread("SoundPlayer");
+    private static final String kTHREAD_NAME = "SoundPlayer";
+
+    /**
+     * Singleton instance
+     */
+    static SoundPlayer sInstance;
+
+    /**
+     * Executers all commands
+     */
+    private final Handler mHandler;
+
+    /**
+     * Media player used to play assets
+     */
+    private final MediaPlayer mMediaPlayer = new MediaPlayer();
+
+    /**
+     * Indication if all sounds effects are enabled
+     */
+    private boolean mEnabled = true;
+
+    private SoundPlayer() {
+        HandlerThread mThread = new HandlerThread(kTHREAD_NAME);
         mThread.start();
 
         mHandler = new Handler(mThread.getLooper());
     }
 
-    static SoundPlayer sInstance;
-
-    HandlerThread mThread;
-    Handler mHandler;
-
-    public static void create(Context context) {
-        sInstance = new SoundPlayer(context);
+    /**
+     * Create the singleton
+     */
+    public static void create() {
+        sInstance = new SoundPlayer();
     }
 
+    /**
+     * Get the singleton
+     */
     public static SoundPlayer get() {
         return sInstance;
     }
 
-
-    public void play(Effect effect) {
-        play(effect, false);
+    /**
+     * Play an effect
+     */
+    public void play(Context context, Effect effect) {
+        play(context, effect, false);
     }
 
-    public void play(Effect effect, boolean loop) {
-        if(!mEnabled) {
+    /**
+     * Play an effect
+     */
+    public void play(Context context, Effect effect, boolean loop) {
+        if (!mEnabled) {
             return;
         }
 
         mHandler.post(() -> {
             try {
-                playPriv(effect, loop);
+                playPriv(context, effect, loop);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
     }
 
+    /**
+     * Enable or disable all sound effects
+     */
     public void setEnabled(boolean enabled) {
         mEnabled = enabled;
     }
 
-    boolean mEnabled = true;
-
-    private void playPriv(Effect effect, boolean loop) throws IOException {
+    private void playPriv(Context context, Effect effect, boolean loop) throws IOException {
         mMediaPlayer.stop();
         mMediaPlayer.reset();
 
-        AssetFileDescriptor descriptor = mContext.getAssets().openFd(effect.getAssetPath());
+        AssetFileDescriptor descriptor = context.getAssets().openFd(effect.getAssetPath());
         mMediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
         descriptor.close();
 
@@ -93,6 +127,9 @@ public class SoundPlayer {
         mMediaPlayer.start();
     }
 
+    /**
+     * Stop playback
+     */
     public void stop() {
         mHandler.post(() -> {
             mMediaPlayer.stop();
@@ -100,6 +137,4 @@ public class SoundPlayer {
 
         });
     }
-
-    MediaPlayer mMediaPlayer = new MediaPlayer();
 }

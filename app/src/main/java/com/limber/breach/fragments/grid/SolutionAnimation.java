@@ -8,12 +8,12 @@ import android.view.SurfaceHolder;
 
 import androidx.fragment.app.Fragment;
 
-import com.limber.breach.DrawUtils;
-import com.limber.breach.SoundPlayer;
 import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 import com.limber.breach.solver.Coordinate;
 import com.limber.breach.solver.PathScore;
+import com.limber.breach.utils.DrawUtils;
+import com.limber.breach.utils.SoundPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +75,7 @@ public class SolutionAnimation extends AGridAnimation {
         mHighlightedCoords.add(mAllCoords.get(mHighlightedCoords.size()));
         redraw();
 
-        SoundPlayer.get().play(SoundPlayer.Effect.beep);
+        SoundPlayer.get().play(getFragment().getContext(), SoundPlayer.Effect.beep);
 
         return kSTEP_TIME_MS;
     }
