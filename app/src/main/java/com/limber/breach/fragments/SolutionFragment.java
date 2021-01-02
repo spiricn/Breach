@@ -181,8 +181,8 @@ public class SolutionFragment extends Fragment {
         Result result = mArgs.getResult();
 
         // Start solving
-        List<List<Integer>> matrix = getRowValues(result.matrix.rows);
-        List<List<Integer>> sequences = getRowValues(result.sequences.rows);
+        List<List<Integer>> matrix = result.matrix.getValues();
+        List<List<Integer>> sequences = result.sequences.getValues();
         mSolver = new Solver(matrix, sequences, mCurrentBufferSize, new Solver.IListener() {
             @Override
             public void onAborted() {
@@ -323,23 +323,5 @@ public class SolutionFragment extends Fragment {
         DrawUtils.drawGrid(result.matrix, result.bitmap, canvas);
 
         mHolder.unlockCanvasAndPost(canvas);
-    }
-
-    /**
-     * Extract row values from nodes
-     */
-    private static List<List<Integer>> getRowValues(List<List<Node>> inRows) {
-        List<List<Integer>> rows = new ArrayList<>();
-
-        for (List<Node> row : inRows) {
-            List<Integer> irow = new ArrayList<>();
-            for (Node node : row) {
-                irow.add(Integer.parseInt(node.text, 16));
-            }
-
-            rows.add(irow);
-        }
-
-        return rows;
     }
 }

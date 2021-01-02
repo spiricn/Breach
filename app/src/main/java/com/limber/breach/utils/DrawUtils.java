@@ -27,7 +27,7 @@ public class DrawUtils {
 
         int horizontal = node.boundingBox.width() * 4;
         int vertical = node.boundingBox.height() * 4;
-        Rect rect = new Rect(grid.boundingBox);
+        Rect rect = grid.getBoundingBox();
 
         rect.set(
                 Math.max(rect.left - horizontal, 0),

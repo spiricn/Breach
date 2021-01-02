@@ -20,11 +20,40 @@ public class Grid implements Parcelable {
     /**
      * Grid bounding box (union of all node bounding boxes)
      */
-    public Rect boundingBox;
+    public Rect getBoundingBox() {
+        Rect boundingBox = new Rect();
+        for (List<Node> row : rows) {
+            for (Node node : row) {
+                boundingBox.union(node.boundingBox);
+            }
+        }
+
+        return boundingBox;
+    }
+
+    /**
+     * Get node integral values
+     */
+    public List<List<Integer>> getValues() {
+        List<List<Integer>> rows = new ArrayList<>();
+
+        for (List<Node> row : this.rows) {
+            List<Integer> irow = new ArrayList<>();
+            for (Node node : row) {
+                irow.add(Integer.parseInt(node.text, 16));
+            }
+
+            rows.add(irow);
+        }
+
+        return rows;
+    }
+
+    public Grid(List<List<Node>> rows) {
+        this.rows = new ArrayList<>(rows);
+    }
 
     protected Grid(Parcel in) {
-        boundingBox = in.readParcelable(Rect.class.getClassLoader());
-
         rows = new ArrayList<>();
 
         int numRows = in.readInt();
@@ -60,7 +89,5 @@ public class Grid implements Parcelable {
         for (List<Node> rows : this.rows) {
             parcel.writeArray(rows.toArray());
         }
-
-        parcel.writeParcelable(boundingBox, i);
     }
 }

@@ -4,19 +4,43 @@ import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Objects;
+
 /**
  * Single grid node representing a piece of analyzed text
  */
 public class Node implements Parcelable {
+    public enum Coord {
+        row,
+        column
+    }
+
+
+    double get(Coord coord) {
+        switch (coord) {
+            case row:
+                return Objects.requireNonNull(boundingBox).top;
+            case column:
+                return Objects.requireNonNull(boundingBox).left;
+        }
+
+        return 0;
+    }
+
     /**
      * Detected text
      */
     public String text;
 
     /**
-     * Text boudning box in the source bitmap
+     * Text bounding box in the source bitmap
      */
     public Rect boundingBox;
+
+    public Node(Rect boundingBox, String text) {
+        this.text = text;
+        this.boundingBox = new Rect(boundingBox);
+    }
 
     protected Node(Parcel in) {
         text = in.readString();

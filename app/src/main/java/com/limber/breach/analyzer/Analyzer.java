@@ -4,9 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.util.Log;
-import android.util.Pair;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
@@ -20,21 +19,106 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class Analyzer {
+    /**
+     * Log tag
+     */
+    private static final String kTAG = Analyzer.class.getSimpleName();
 
+    /**
+     * Called on processing success
+     */
     public interface SuccessCallback {
         void onAnalyzed(Result result);
     }
 
+    /**
+     * Called on processing failure
+     */
     public interface FailedCallback {
         void onFailed(Exception e);
     }
 
-    static Bitmap mBmp;
+    /**
+     * Processed texts result
+     */
+    private static class ProcessedText {
+        /**
+         * Average node width
+         */
+        double averageWidth = 0;
 
+        /**
+         * Average node height
+         */
+        double averageHeight = 0;
 
+        /**
+         * All nodes
+         */
+        List<Node> nodes = new ArrayList<>();
+
+        List<Node> findNodesInColumn(double reference) {
+            return findNodes(
+                    Node.Coord.column,
+                    reference,
+                    getAverage(Node.Coord.column),
+                    this.nodes);
+        }
+
+        List<Node> findNodesInRow(double reference, @Nullable List<Node> nodes) {
+            return findNodes(
+                    Node.Coord.row,
+                    reference,
+                    getAverage(Node.Coord.row),
+                    nodes != null ? nodes : this.nodes);
+        }
+
+        /**
+         * Get average width or height
+         */
+        double getAverage(Node.Coord coord) {
+            return coord == Node.Coord.row ? this.averageHeight : this.averageWidth;
+        }
+
+        /**
+         * Find all nodes in row or column of given list
+         *
+         * @param coord     Row or column
+         * @param reference Reference value (left or top)
+         * @param average   Average width or height
+         * @param nodes     List of nodes
+         */
+        private static List<Node> findNodes(Node.Coord coord, double reference, double average, List<Node> nodes) {
+            List<Node> result = new ArrayList<>();
+
+            for (Node node : nodes) {
+                if (Math.abs(node.get(coord) - reference) <= average) {
+                    result.add(node);
+                }
+            }
+
+            // Sort by other coordinate
+            Node.Coord otherCoord = coord == Node.Coord.row ? Node.Coord.column : Node.Coord.row;
+            Collections.sort(result, (o1, o2) -> Double.compare(o1.get(otherCoord), o2.get(otherCoord)));
+
+            return result;
+        }
+    }
+
+    /**
+     * Minimum valid matrix size
+     */
+    private static final int kMIN_MATRIX_SIZE = 4;
+
+    /**
+     * Analyze a bitmap and provide matrix & sequence results
+     *
+     * @param bitmap          Input bitmap
+     * @param successCallback Called on success
+     * @param failedCallback  Called on failure
+     * @param handler         Handler on which the callback is executed
+     */
     public static void analyze(Bitmap bitmap, SuccessCallback successCallback, FailedCallback failedCallback, Handler handler) {
-        mBmp = bitmap;
-
         InputImage image = InputImage.fromBitmap(bitmap, 0);
         TextRecognizer recognizer = TextRecognition.getClient();
 
@@ -43,8 +127,9 @@ public class Analyzer {
                         texts -> handler.post(() -> {
                             Result result;
                             try {
-                                result = processTextRecognitionResult(texts);
+                                result = processTextRecognitionResult(bitmap, texts);
                             } catch (Exception e) {
+                                e.printStackTrace();
                                 failedCallback.onFailed(e);
                                 return;
                             }
@@ -54,84 +139,45 @@ public class Analyzer {
                 .addOnFailureListener(e -> handler.post(() -> failedCallback.onFailed(e)));
     }
 
-    enum Coord {
-        row,
-        column
-    }
-
-    static class Node {
-        Text.Element element;
-
-        Node(@NonNull Text.Element element) {
-            this.element = element;
-        }
-
-        double get(Coord coord) {
-            switch (coord) {
-                case row:
-                    return Objects.requireNonNull(element.getBoundingBox()).top;
-                case column:
-                    return Objects.requireNonNull(element.getBoundingBox()).left;
-            }
-
-            return 0;
-        }
-    }
 
     /**
-     * Given a list of nodes, calculate the average node width/height
+     * Process texts
      *
-     * @param nodes List of nodes
-     * @return {width, height} pair
+     * @param bitmap Input bitmap
+     * @param texts  Analyzed text
      */
-    static Pair<Double, Double> calculateAverageNodeSize(List<Node> nodes) {
-        double averageWidth = 0;
-        double averageHeight = 0;
+    private static Result processTextRecognitionResult(Bitmap bitmap, Text texts) {
+        Result result = new Result();
 
-        for (Node node : nodes) {
-            averageWidth += Objects.requireNonNull(node.element.getBoundingBox()).width();
-            averageHeight += node.element.getBoundingBox().height();
-        }
+        result.bitmap = bitmap;
 
-        averageHeight /= nodes.size();
-        averageWidth /= nodes.size();
-
-        return new Pair<>(averageWidth, averageHeight);
-    }
-
-
-    static List<Node> find(Node reference, double average, List<Node> nodes) {
-        return find(Coord.row, reference.get(Coord.row), average, nodes);
-    }
-
-    static List<Node> find(Coord coord, double reference, double average, List<Node> nodes) {
-        List<Node> result = new ArrayList<>();
-
-        for (Node node : nodes) {
-            if (Math.abs(node.get(coord) - reference) <= average) {
-                result.add(node);
-            }
-        }
-
-        Coord otherCoord = coord == Coord.row ? Coord.column : Coord.row;
-
-        Collections.sort(result, (o1, o2) -> Double.compare(o1.get(otherCoord), o2.get(otherCoord)));
+        ProcessedText processedText = processTexts(texts);
+        result.matrix = findMatrix(processedText);
+        result.sequences = findSequences(processedText, result.matrix);
 
         return result;
     }
 
-    static List<List<Node>> splitRows(double average, List<Node> nodes) {
+    /**
+     * Split the list of nodes in rows
+     */
+    private static List<List<Node>> splitNodesByRows(ProcessedText processedText) {
+        return splitNodesByRows(processedText, new ArrayList<>(processedText.nodes));
+    }
+
+    /**
+     * Split a list of given nodes in rows
+     */
+    private static List<List<Node>> splitNodesByRows(ProcessedText processedText, List<Node> nodes) {
+        List<Node> allNodes = new ArrayList<>(nodes);
         List<List<Node>> rows = new ArrayList<>();
 
-        while (!nodes.isEmpty()) {
-            List<Node> row = new ArrayList<>();
+        while (!allNodes.isEmpty()) {
+            Node currentNode = allNodes.get(0);
+            allNodes.remove(0);
 
-            Node currentNode = nodes.get(0);
-            nodes.remove(0);
-            row.add(currentNode);
-
-            row.addAll(find(currentNode, average, nodes));
-            nodes.removeAll(row);
+            List<Node> row = new ArrayList<>(processedText.findNodesInRow(currentNode.boundingBox.top, nodes));
+            allNodes.removeAll(row);
 
             rows.add(row);
         }
@@ -139,168 +185,144 @@ public class Analyzer {
         return rows;
     }
 
-    static Grid convertGrid(List<List<Node>> nodes) {
-        Grid grid = new Grid();
 
-        for (List<Node> row : nodes) {
-            ArrayList<com.limber.breach.analyzer.Node> resRow = new ArrayList<>();
+    /**
+     * Find matrix
+     *
+     * @param processedText Processed text
+     */
+    private static Grid findMatrix(ProcessedText processedText) {
+        // Split all the nodes by rows
+        List<List<Node>> rows = splitNodesByRows(processedText);
 
+        // Debug log the rows
+        StringBuilder sb = new StringBuilder();
+        for (List<Node> row : rows) {
             for (Node node : row) {
-                if (grid.boundingBox == null) {
-                    grid.boundingBox = new Rect(node.element.getBoundingBox());
-                } else {
-                    grid.boundingBox.union(node.element.getBoundingBox());
-                }
-
-                resRow.add(new com.limber.breach.analyzer.Node(node.element.getText(), node.element.getBoundingBox()));
+                sb.append(node.text).append(" ");
             }
 
-            grid.rows.add(resRow);
+            sb.append("\n");
         }
+        Log.v(kTAG, "Found " + rows.size() + " rows:\n" + sb.toString());
 
-        return grid;
-    }
-
-    private static Result processTextRecognitionResult(Text texts) {
-        Result result = new Result();
-
-        MatrixResult matrixRes = processMatrix(texts);
-
-        assert matrixRes != null;
-        result.matrix = convertGrid(matrixRes.matrix);
-        result.bitmap = mBmp;
-
-        List<Node> sequenceNodes = new ArrayList<>();
-        for (Node node : matrixRes.nodes) {
-            if (Objects.requireNonNull(node.element.getBoundingBox()).intersect(matrixRes.boundingBox)) {
-                continue;
-            }
-
-            if ((node.element.getBoundingBox().top) < (matrixRes.boundingBox.top - matrixRes.averageHeight * 2)) {
-                continue;
-            }
-
-            if (node.element.getBoundingBox().bottom > matrixRes.boundingBox.bottom) {
-                continue;
-            }
-
-            sequenceNodes.add(node);
-        }
-
-        result.sequences = convertGrid(splitRows(matrixRes.averageWidth, sequenceNodes));
-
-        return result;
-    }
-
-
-    static class MatrixResult {
-        List<Node> nodes;
-        List<List<Node>> matrix;
-        Rect boundingBox;
-        double averageWidth;
-        double averageHeight;
-    }
-
-
-    private static final int kMIN_MATRIX_SIZE = 4;
-
-    private static MatrixResult processMatrix(Text texts) {
-
-        // Pre-process nodes
-        List<Node> nodes = preprocessNodes(texts);
-
-        List<Node> allNodes = new ArrayList<>(nodes);
-
-
-        // Average size
-        Pair<Double, Double> averageSize = calculateAverageNodeSize(nodes);
-        double averageWidth = averageSize.first;
-        double averageHeight = averageSize.second;
-
-        List<List<Node>> rows = splitRows(averageHeight, nodes);
-
-        Collections.sort(rows, (o1, o2) -> Integer.compare(Objects.requireNonNull(o1.get(0).element.getBoundingBox()).top,
-                Objects.requireNonNull(o2.get(0).element.getBoundingBox()).top));
+        // Sort the rows vertically
+        Collections.sort(rows, (o1, o2) -> Integer.compare(Objects.requireNonNull(o1.get(0).boundingBox).top,
+                Objects.requireNonNull(o2.get(0).boundingBox).top));
 
         if (rows.size() < kMIN_MATRIX_SIZE) {
-            throw new RuntimeException("Not found");
+            throw new RuntimeException("Not enough rows: " + rows.size());
         }
 
-        for (List<Node> row : rows) {
+        int expectedColumnSize =
+                processedText.findNodesInColumn(rows.get(rows.size() / 2).get(kMIN_MATRIX_SIZE / 2).boundingBox.left).size();
 
+        Log.v(kTAG, "Expected column size: " + expectedColumnSize);
+
+        for (List<Node> row : rows) {
+            // Ignore rows that are too small
             if (row.size() < kMIN_MATRIX_SIZE) {
                 continue;
             }
 
             List<List<Node>> columns = new ArrayList<>();
 
-            int size = find(Coord.column, Objects.requireNonNull(row.get(kMIN_MATRIX_SIZE / 2).element.getBoundingBox()).left,
-                    averageWidth, allNodes).size();
-
-            for (int i = 0; i < size; i++) {
-                List<Node> column = find(Coord.column, Objects.requireNonNull(row.get(i).element.getBoundingBox()).left,
-                        averageWidth, allNodes);
-                if (column.size() < size) {
+            for (int i = 0; i < expectedColumnSize; i++) {
+                List<Node> column = processedText.findNodesInColumn(Objects.requireNonNull(row.get(i).boundingBox).left);
+                if (column.size() < expectedColumnSize) {
                     break;
                 }
 
                 columns.add(column);
             }
 
-            if (columns.size() == size) {
-                MatrixResult result = new MatrixResult();
-                result.averageHeight = averageHeight;
-                result.averageWidth = averageWidth;
+            if (columns.size() != expectedColumnSize) {
+                // Discard row
+                continue;
+            }
 
+            List<List<Node>> matrix = new ArrayList<>();
 
-                List<List<Node>> matrix = new ArrayList<>();
+            for (int i = 0; i < expectedColumnSize; i++) {
+                List<Node> resultRow = new ArrayList<>();
 
-                for (int i = 0; i < size; i++) {
-                    List<Node> resultRow = new ArrayList<>();
-
-                    for (List<Node> column : columns) {
-                        Node node = column.get(i);
-                        resultRow.add(node);
-
-                        if (result.boundingBox == null) {
-                            result.boundingBox = new Rect(node.element.getBoundingBox());
-                        } else {
-                            result.boundingBox.union(node.element.getBoundingBox());
-                        }
-                    }
-
-                    matrix.add(resultRow);
+                for (List<Node> column : columns) {
+                    Node node = column.get(i);
+                    resultRow.add(node);
                 }
 
-
-                result.nodes = allNodes;
-                result.matrix = matrix;
-
-                return result;
-            } else {
-                Log.e("@#", "disard row");
+                matrix.add(resultRow);
             }
+
+            return new Grid(matrix);
         }
 
-        throw new RuntimeException("Not found");
+        throw new RuntimeException();
     }
 
-    private static List<Node> preprocessNodes(Text texts) {
-        Pattern pattern = Pattern.compile("[0-9a-fA-F]{2}", Pattern.CASE_INSENSITIVE);
+    /**
+     * Find sequences
+     *
+     * @param processedText Processed text
+     * @param matrix        Matrix grid
+     */
+    private static Grid findSequences(ProcessedText processedText, Grid matrix) {
+        Rect matrixBoundingBox = matrix.getBoundingBox();
 
-        List<Node> elements = new ArrayList<>();
+
+        List<Node> sequenceNodes = new ArrayList<>();
+        for (Node node : processedText.nodes) {
+            if (node.boundingBox.intersect(matrixBoundingBox)) {
+                // Ignore nodes which intersect with matrix
+                continue;
+            }
+
+            if ((node.boundingBox.top) < (matrixBoundingBox.top - processedText.averageHeight * 2)) {
+                // Ignore nodes above the matrix
+                continue;
+            }
+
+            if (node.boundingBox.bottom > matrixBoundingBox.bottom) {
+                // Ignore nodes below the matrix
+                continue;
+            }
+
+            sequenceNodes.add(node);
+        }
+
+        return new Grid(splitNodesByRows(processedText, sequenceNodes));
+    }
+
+
+    /**
+     * Pre-process raw text result
+     */
+    private static ProcessedText processTexts(Text texts) {
+        ProcessedText result = new ProcessedText();
+
+        Pattern pattern = Pattern.compile("[0-9a-fA-F]{2}", Pattern.CASE_INSENSITIVE);
 
         for (Text.TextBlock block : texts.getTextBlocks()) {
             List<Text.Line> lines = block.getLines();
             for (Text.Line line : lines) {
                 for (Text.Element element : line.getElements()) {
                     if (pattern.matcher(element.getText()).matches()) {
-                        elements.add(new Node(element));
+                        result.averageWidth += Objects.requireNonNull(element.getBoundingBox()).width();
+                        result.averageHeight += element.getBoundingBox().height();
+
+                        result.nodes.add(new Node(element.getBoundingBox(), element.getText()));
+
+                        Log.v(kTAG, "Found node: " + element.getText());
                     }
                 }
             }
         }
 
-        return elements;
+        result.averageWidth /= result.nodes.size();
+        result.averageHeight /= result.nodes.size();
+
+        Log.v(kTAG, "Average node size (" + result.averageWidth + " x " + result.averageHeight + ")");
+
+        return result;
     }
 }
