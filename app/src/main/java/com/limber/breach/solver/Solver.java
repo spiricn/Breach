@@ -8,30 +8,80 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * Breach minigame solver based on Nicolas Siplis algorithm
+ * <p>
+ * For more information see https://nicolas-siplis.com/blog/cyberpwned
+ */
 public class Solver {
-    List<List<Integer>> mSequences;
-    int mBufferSize;
-    List<List<Integer>> mCodeMatrix;
-    boolean mRunning = false;
-    Thread mThread;
-    IListener mListener;
-    Handler mCallbackHandler;
-
-    public interface IListener {
-        void onAborted();
-
+    /**
+     * Called on success
+     */
+    public interface SuccessCallback {
         void onSolved(PathScore result);
     }
 
+    /**
+     * Called on failure
+     */
+    public interface FailedCallback {
+        void onFailed(Exception e);
+    }
+
+    /**
+     * Input sequences
+     */
+    private final List<List<Integer>> mSequences;
+
+    /**
+     * Input buffer size
+     */
+    private final int mBufferSize;
+
+    /**
+     * Input code matrix
+     */
+    private final List<List<Integer>> mCodeMatrix;
+
+    /**
+     * Indication if start() was called
+     */
+    private boolean mRunning = false;
+
+    /**
+     * Execution background thread
+     */
+    private Thread mThread;
+
+    /**
+     * Callback listener
+     */
+    private final SuccessCallback mSuccessCallback;
+
+    /**
+     * Callback listener
+     */
+    private final FailedCallback mFailedCallback;
+
+    /**
+     * Handler used to execute callbacks
+     */
+    private final Handler mCallbackHandler;
+
+
     public Solver(@NonNull List<List<Integer>> codeMatrix, @NonNull List<List<Integer>> sequences,
-                  int bufferSize, @NonNull IListener listener, Handler callbackHandler) {
+                  int bufferSize, @NonNull SuccessCallback successCallback, FailedCallback failedCallback, Handler callbackHandler) {
         mCodeMatrix = codeMatrix;
         mSequences = sequences;
         mBufferSize = bufferSize;
-        mListener = listener;
+        mSuccessCallback = successCallback;
+        mFailedCallback = failedCallback;
         mCallbackHandler = callbackHandler;
     }
 
+    /**
+     * Start solving in the background
+     */
     public void start() {
         if (mRunning) {
             throw new RuntimeException("Already running");
@@ -42,15 +92,18 @@ public class Solver {
         mThread = new Thread(() -> {
             try {
                 PathScore result = solve();
-                mCallbackHandler.post(() -> mListener.onSolved(result));
-
-            } catch (InterruptedException e) {
-                mCallbackHandler.post(() -> mListener.onAborted());
+                mCallbackHandler.post(() -> mSuccessCallback.onSolved(result));
+            } catch (Exception e) {
+                mCallbackHandler.post(() -> mFailedCallback.onFailed(e));
             }
         });
+
         mThread.start();
     }
 
+    /**
+     * Stop solving
+     */
     public void stop() {
         if (!mRunning) {
             return;
@@ -67,6 +120,11 @@ public class Solver {
         mCallbackHandler.removeCallbacks(null);
     }
 
+    /**
+     * Solve matrix
+     *
+     * @throws InterruptedException In case stop() was called during executio
+     */
     private PathScore solve() throws InterruptedException {
         List<Path> paths = generatePaths(mCodeMatrix, mBufferSize);
 
@@ -83,7 +141,7 @@ public class Solver {
         return result;
     }
 
-    static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix) {
+    private static List<Coordinate> candidateCoords(List<List<Integer>> codeMatrix) {
         return candidateCoords(codeMatrix, 0, Coordinate.from(0, 0));
     }
 

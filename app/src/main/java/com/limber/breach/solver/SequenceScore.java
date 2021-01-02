@@ -3,6 +3,16 @@ package com.limber.breach.solver;
 import java.util.List;
 
 public class SequenceScore {
+    private final int mMaxProgress;
+
+    private final List<Integer> mSequence;
+
+    private int mScore;
+
+    private final int mRewardLevel;
+
+    private int mBufferSize;
+
     public SequenceScore(List<Integer> sequence, int bufferSize, int rewardLevel) {
         mMaxProgress = sequence.size();
         mSequence = sequence;
@@ -62,10 +72,4 @@ public class SequenceScore {
     public int score() {
         return mScore;
     }
-
-    private final int mMaxProgress;
-    private final List<Integer> mSequence;
-    private int mScore;
-    private final int mRewardLevel;
-    private int mBufferSize;
 }

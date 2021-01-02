@@ -17,18 +17,15 @@ import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
 import com.limber.breach.R;
-import com.limber.breach.analyzer.Node;
 import com.limber.breach.analyzer.Result;
 import com.limber.breach.fragments.grid.AGridAnimation;
 import com.limber.breach.fragments.grid.SolutionAnimation;
 import com.limber.breach.fragments.grid.WorkingAnimation;
-import com.limber.breach.solver.PathScore;
 import com.limber.breach.solver.Solver;
 import com.limber.breach.utils.DrawUtils;
 import com.limber.breach.utils.SoundPlayer;
 import com.limber.breach.utils.Vibrator;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -183,39 +180,31 @@ public class SolutionFragment extends Fragment {
         // Start solving
         List<List<Integer>> matrix = result.matrix.getValues();
         List<List<Integer>> sequences = result.sequences.getValues();
-        mSolver = new Solver(matrix, sequences, mCurrentBufferSize, new Solver.IListener() {
-            @Override
-            public void onAborted() {
+        mSolver = new Solver(matrix, sequences, mCurrentBufferSize, result1 -> {
+            if (getView() == null) {
+                return;
+            }
+
+            // If we finished too fast, delay the animation a bit (better UX)
+            long solveDuration = System.currentTimeMillis() - mSolveStartTimestamp;
+
+            Runnable resultRunnable = () -> {
                 stopSolving();
+
+                mCurrentAnimation = new SolutionAnimation(SolutionFragment.this, mHolder, mArgs.getResult(), result1);
+                mCurrentAnimation.start();
+
+                Vibrator.get().play(Vibrator.Effect.success);
+            };
+
+            if (solveDuration >= kMIN_SOLVE_DURATION_MS) {
+                // Show solution right away
+                resultRunnable.run();
+            } else {
+                // Delay
+                mDelayHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
             }
-
-            @Override
-            public void onSolved(PathScore result) {
-                if (getView() == null) {
-                    return;
-                }
-
-                // If we finished too fast, delay the animation a bit (better UX)
-                long solveDuration = System.currentTimeMillis() - mSolveStartTimestamp;
-
-                Runnable resultRunnable = () -> {
-                    stopSolving();
-
-                    mCurrentAnimation = new SolutionAnimation(SolutionFragment.this, mHolder, mArgs.getResult(), result);
-                    mCurrentAnimation.start();
-
-                    Vibrator.get().play(Vibrator.Effect.success);
-                };
-
-                if (solveDuration >= kMIN_SOLVE_DURATION_MS) {
-                    // Show solution right away
-                    resultRunnable.run();
-                } else {
-                    // Delay
-                    mDelayHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
-                }
-            }
-        }, new Handler(Looper.getMainLooper()));
+        }, e -> stopSolving(), new Handler(Looper.getMainLooper()));
 
         mSolver.start();
     }

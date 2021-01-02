@@ -37,5 +37,6 @@ public class PathScore {
     }
 
     private final Path mPath;
+
     private int mScore;
 }

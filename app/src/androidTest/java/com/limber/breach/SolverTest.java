@@ -1,24 +1,29 @@
 package com.limber.breach;
 
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import com.limber.breach.solver.Coordinate;
 import com.limber.breach.solver.PathScore;
 import com.limber.breach.solver.Solver;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
-public class ExampleUnitTest {
+@RunWith(AndroidJUnit4.class)
+public class SolverTest {
     @Test
-    public void addition_isCorrect() {
+    public void solve5x5() throws ExecutionException, InterruptedException {
 
         List<List<Integer>> codeMatrix = Arrays.asList(
                 Arrays.asList(0x1c, 0xbd, 0x55, 0xe9, 0x55),
@@ -37,10 +42,22 @@ public class ExampleUnitTest {
 
         int bufferSize = 7;
 
-        PathScore maxScore = Solver.solve(codeMatrix, sequences, bufferSize);
+        HandlerThread thread = new HandlerThread("Test");
+        thread.start();
+
+        Handler handler = new Handler(Looper.getMainLooper());
+
+        CompletableFuture<PathScore> f = new CompletableFuture<>();
+
+        Solver solver = new Solver(codeMatrix, sequences, bufferSize, f::complete, f::completeExceptionally,
+                handler);
+
+        solver.start();
+
+        PathScore maxScore = f.get();
         assertNotNull(maxScore);
 
-        assertEquals(
+        assertArrayEquals(
                 Arrays.asList(Coordinate.from(0, 1),
                         Coordinate.from(2, 1),
                         Coordinate.from(2, 3),
