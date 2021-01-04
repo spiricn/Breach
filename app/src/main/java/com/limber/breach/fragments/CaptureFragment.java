@@ -64,7 +64,10 @@ public class CaptureFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         mCaptureButton = view.findViewById(R.id.camera_capture_button);
-        mCaptureButton.setEnabled(false);
+
+        setLoading(true);
+
+        view.findViewById(R.id.progressBar).bringToFront();
 
         mHandler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -90,6 +93,11 @@ public class CaptureFragment extends Fragment {
         initializeCamera();
     }
 
+    private void setLoading(boolean loading) {
+        mCaptureButton.setEnabled(!loading);
+        requireView().findViewById(R.id.progressBar).setVisibility(loading ? View.VISIBLE : View.GONE);
+    }
+
     @Override
     public void onDestroyView() {
         // Clear cached arguments
@@ -104,7 +112,8 @@ public class CaptureFragment extends Fragment {
      * Capture a bitmap from the camera
      */
     private void captureBitmap() {
-        mCaptureButton.setEnabled(false);
+        setLoading(true);
+
         if (mSnackbar != null) {
             mSnackbar.dismiss();
         }
@@ -124,7 +133,6 @@ public class CaptureFragment extends Fragment {
                         super.onCaptureSuccess(image);
 
                         mHandler.post(() -> analyzeBitmap(BitmapFactory.decodeByteArray(bytes, 0, bytes.length)));
-
                     }
 
                     @Override
@@ -135,6 +143,8 @@ public class CaptureFragment extends Fragment {
                         mHandler.post(() -> Snackbar.make(requireView(),
                                 R.string.errorTakePicture, Snackbar.LENGTH_LONG)
                                 .show());
+
+                        setLoading(false);
                     }
                 }
         );
@@ -159,7 +169,7 @@ public class CaptureFragment extends Fragment {
                     .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE);
             mSnackbar.show();
 
-            mCaptureButton.setEnabled(true);
+            setLoading(false);
         }, mHandler);
     }
 
@@ -191,7 +201,7 @@ public class CaptureFragment extends Fragment {
             cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, mImageCapture);
 
-            mCaptureButton.setEnabled(true);
+            setLoading(false);
         }), ContextCompat.getMainExecutor(requireActivity()));
     }
 }
