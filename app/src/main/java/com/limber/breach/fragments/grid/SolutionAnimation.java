@@ -88,7 +88,7 @@ public class SolutionAnimation extends AGridAnimation {
 
         // Draw background grid
         DrawUtils.drawGrid(mResult.matrix, mResult.bitmap, canvas);
-        DrawUtils.scaleFor(canvas, DrawUtils.getRect(mResult.matrix));
+        DrawUtils.scaleFor(canvas, DrawUtils.getGridRect(mResult.matrix));
 
         int stepCounter = 1;
 
