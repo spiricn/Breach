@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -86,7 +87,7 @@ public class SolutionFragment extends Fragment implements IFragmentBase {
     /**
      * Used to delay working animation if too fast
      */
-    private Handler mDelayHandler;
+    private Handler mHandler;
 
     /**
      * Current grid animation
@@ -117,7 +118,17 @@ public class SolutionFragment extends Fragment implements IFragmentBase {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        mDelayHandler = new Handler(Looper.getMainLooper());
+        mHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void dispatchMessage(@NonNull Message msg) {
+                if (getView() == null) {
+                    // Ignore all callbacks if fragment was destroyed
+                    return;
+                }
+
+                super.dispatchMessage(msg);
+            }
+        };
 
         mArgs = SolutionFragmentArgs.fromBundle(requireArguments());
 
@@ -202,9 +213,9 @@ public class SolutionFragment extends Fragment implements IFragmentBase {
                 resultRunnable.run();
             } else {
                 // Delay
-                mDelayHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
+                mHandler.postDelayed(resultRunnable, kMIN_SOLVE_DURATION_MS - solveDuration);
             }
-        }, e -> stopSolving(), new Handler(Looper.getMainLooper()));
+        }, e -> stopSolving(), mHandler);
 
         mSolver.start();
     }
@@ -283,7 +294,7 @@ public class SolutionFragment extends Fragment implements IFragmentBase {
      * Stop ongoing solve calculations (if any)
      */
     private void stopSolving() {
-        mDelayHandler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacksAndMessages(null);
 
         if (mSolver != null) {
             mSolver.stop();
