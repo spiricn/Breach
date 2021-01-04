@@ -19,12 +19,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.limber.breach.fragments.CaptureFragmentDirections;
+import com.limber.breach.fragments.IFragmentBase;
 import com.limber.breach.utils.SoundPlayer;
 import com.limber.breach.utils.Vibrator;
+
+import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
@@ -110,6 +116,22 @@ public class MainActivity extends AppCompatActivity {
 
             Navigation.findNavController(this, R.id.fragment).navigate(action);
             return true;
+        } else if (item.getItemId() == R.id.action_help) {
+            // Find the currently active fragment
+            NavHostFragment navHost = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
+            List<Fragment> list = Objects.requireNonNull(navHost).getChildFragmentManager().getFragments();
+
+            // Get help text ID from the fragment
+            Fragment currentFragment = list.get(list.size() - 1);
+            int helpText = R.string.helpNoHelpAvailable;
+            if (currentFragment instanceof IFragmentBase) {
+                helpText = ((IFragmentBase) currentFragment).getHelpText();
+            }
+
+            Snackbar.make(getWindow().getDecorView().getRootView(),
+                    helpText, Snackbar.LENGTH_INDEFINITE).setAction(
+                    R.string.helpDismiss, view -> {
+                    }).show();
         }
 
 

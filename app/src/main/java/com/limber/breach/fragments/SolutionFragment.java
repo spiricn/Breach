@@ -32,7 +32,7 @@ import java.util.Locale;
 /**
  * Calculates and shows the correct solution on screen
  */
-public class SolutionFragment extends Fragment {
+public class SolutionFragment extends Fragment implements IFragmentBase {
     public SolutionFragment() {
         super(R.layout.fragment_solution);
     }
@@ -312,5 +312,10 @@ public class SolutionFragment extends Fragment {
         DrawUtils.drawGrid(result.matrix, result.bitmap, canvas);
 
         mHolder.unlockCanvasAndPost(canvas);
+    }
+
+    @Override
+    public int getHelpText() {
+        return R.string.helpSolution;
     }
 }

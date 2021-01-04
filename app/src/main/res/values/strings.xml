@@ -17,5 +17,13 @@
     <string name="settingOn">on</string>
     <string name="settingOff">off</string>
     <string name="errorTakePicture">Failed to capture picture</string>
+    <string name="actionHelp">Help</string>
+
+    <string name="helpNoHelpAvailable">No help available</string>
+    <string name="helpCaptureFragment">Take a picture of the mini game screen (make sure that both matrix and sequences are visible </string>
+    <string name="helpVerify">Confirm that the scanned numbers are correct. If not, you may retry the scan !</string>
+    <string name="helpSolution">Input the buffer size, and click solve. The correct steps will be shown on screen</string>
+    <string name="helpDismiss">[ DISMISS ]</string>
+
 
 </resources>

@@ -1,5 +1,6 @@
 package com.limber.breach.fragments;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -35,7 +36,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Captures a bitmap from camera and analyzes it
  */
-public class CaptureFragment extends Fragment {
+public class CaptureFragment extends Fragment implements IFragmentBase {
 
     /**
      * Camera capture button
@@ -60,6 +61,7 @@ public class CaptureFragment extends Fragment {
     public CaptureFragment() {
         super(R.layout.fragment_capture);
     }
+
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -203,5 +205,10 @@ public class CaptureFragment extends Fragment {
 
             setLoading(false);
         }), ContextCompat.getMainExecutor(requireActivity()));
+    }
+
+    @Override
+    public int getHelpText() {
+        return R.string.helpCaptureFragment;
     }
 }

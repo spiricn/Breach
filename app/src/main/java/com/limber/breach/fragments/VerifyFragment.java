@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Shows the user analyzed grids
  */
-public class VerifyFragment extends Fragment {
+public class VerifyFragment extends Fragment implements IFragmentBase {
     /**
      * Indication if matrices or sequences should be displayed
      */
@@ -165,6 +165,11 @@ public class VerifyFragment extends Fragment {
         }
 
         mSurfaceHolder.unlockCanvasAndPost(canvas);
+    }
+
+    @Override
+    public int getHelpText() {
+        return R.string.helpVerify;
     }
 
     static {
